@@ -47,11 +47,10 @@ Route::group([
     Route::get('inventories/items', [ApiController::class, 'items'])->name('items.index');
     Route::post('inventories/items', [ApiController::class, 'addItem'])->name('item.add');
     
-    // unimplemented
+
     Route::get('inventories/items/{item}', [ApiController::class, 'item'])->name('item.show');
     Route::put('inventories/items/{item}', [ApiController::class, 'updateItem'])->name('item.update');
     
-    // unimplented
     Route::get('inventories/favorite/items', [ApiController::class, 'favorite'])->name('items.favorite');
     Route::get('inventories/archived/items', [ApiController::class, 'archivedItem'])->name('items.archived');
     Route::get('inventories/estimatedItems', [ApiController::class, 'estimatedItem'])->name('items.estimated');

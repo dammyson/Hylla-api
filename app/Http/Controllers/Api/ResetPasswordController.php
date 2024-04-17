@@ -20,7 +20,7 @@ class ResetPasswordController extends Controller
     }
 
     public function resetPasswordPost(Request $request) {
-       
+       try {
         $request->validate([
             'email' => 'required|email|exists:users',
             'password' => 'required|string|min:6|confirmed',
@@ -56,6 +56,15 @@ class ResetPasswordController extends Controller
             "hashedPassword" => $hashedPassword
    
         ]);
+    
+    } catch (\Throwable $throwable) {
+        $message = $throwable->getMessage();
+        return response()->json([
+            'status' => 'failed',
+            'message' => $message
+        ]);
+    }
+        
 
         //return redirect()->to(route('login'))->with('success', 'Password reset successfully');
     

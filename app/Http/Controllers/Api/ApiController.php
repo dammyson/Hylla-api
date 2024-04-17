@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use Exception;
 use App\Models\Item;
 use App\Models\User;
 use App\Models\Category;
@@ -10,6 +11,10 @@ use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Validation\ValidationException;
+use Laravel\Passport\Exceptions\AuthenticationException;
 
 class ApiController extends Controller
 {
@@ -17,78 +22,97 @@ class ApiController extends Controller
 
     public function register(Request $request) {
 
-        //data validation
-        $request->validate([
-            "first_name" => 'required',
-            "last_name" => 'required',
-            "date_of_birth" => 'required',
-            "phone_number" => "required|unique:users",
-            "zip_code" => "required",
-            "email" => "required|email|unique:users",
-            "password" => "required|confirmed",
-        ]);
-
-        User::create([
-            "name" => $request->first_name . ' ' . $request->last_name,
-            "first_name" => $request->first_name,
-            "last_name" => $request->last_name,
-            "date_of_birth" => $request->date_of_birth,
-            "phone_number" => $request->phone_number,
-            "zip_code" => $request->zip_code,
-            "email" => $request->email,
-            "password" => Hash::make($request->password),
-        ]);
-
-        /*
-            IMPORTANT! the commented code the below has not been tested yet (because twillio credential are  not available) however,
-            it redirects to the generateOtp route and passing the email and password as parameters
-            
-            if this method fails (we try to pass the data as form data) then comment it and use the next one where variable as passed as route parameters
-
-            return redirect()->route('otp.generate')->with([
-                'email' => $request->email, 
-                'password' => $request->password,
+        try {
+            //data validation
+            $request->validate([
+                "first_name" => 'required',
+                "last_name" => 'required',
+                "date_of_birth" => 'required',
+                "phone_number" => "required|unique:users",
+                "zip_code" => "required",
+                "email" => "required|email|unique:users",
+                "password" => "required|confirmed",
             ]);
-            
-            here while redirecting to the generate route pass in the variables as route parameters 
-            // return redirect()->route('otp.generate', ['email' => $request->email, 'password' => $request->password, 'phone_no'=> $request->phone_no])->with('success','user registered successfully');
-            
-        */
-       
+
+            User::create([
+                "name" => $request->first_name . ' ' . $request->last_name,
+                "first_name" => $request->first_name,
+                "last_name" => $request->last_name,
+                "date_of_birth" => $request->date_of_birth,
+                "phone_number" => $request->phone_number,
+                "zip_code" => $request->zip_code,
+                "email" => $request->email,
+                "password" => Hash::make($request->password),
+            ]);
+
+            /*
+                IMPORTANT! the commented code the below has not been tested yet (because twillio credential are  not available) however,
+                it redirects to the generateOtp route and passing the email and password as parameters
+                
+                if this method fails (we try to pass the data as form data) then comment it and use the next one where variable as passed as route parameters
+
+                return redirect()->route('otp.generate')->with([
+                    'email' => $request->email, 
+                    'password' => $request->password,
+                ]);
+                
+                here while redirecting to the generate route pass in the variables as route parameters 
+                // return redirect()->route('otp.generate', ['email' => $request->email, 'password' => $request->password, 'phone_no'=> $request->phone_no])->with('success','user registered successfully');
+                
+            */
         
-        return response()->json([
-            "status" => true,
-            "message" => "User created successfully"
-        ]);
+            
+            return response()->json([
+                "status" => true,
+                "message" => "User created successfully"
+            ]);
+        
+        } catch(\Throwable $throwable) {
+            $message = $throwable->getMessage();
+
+            return response()->json([
+                "status" => 'failed',
+                "message" => $message
+            ]);
+        }
+
+        
 
     }
 
 
     public function login(Request $request) {
-        $request->validate([
-            "email" => "required|email",
-            "password" => "required"
-        ]);
-
-        /**
-         * IMPORTANT|! if the twillio credential (for user otp) are ready, uncomment this and 
-         * comment out the rest  others below. 
-         * 
-         * if the commented method fails, then convert the variable being pass using the 'with' 
-         * method to route parameters
-        */ 
-        // return redirect()->route('otp.generate')->with([
-        //     'email' => $request->email, 
-        //     'password' => $request->password
-        // ]);
-
-        
-        // if the twillio credential are ready then comment/delete these codes below
-        if (Auth::attempt([
-            "email" => $request->email,
-            "password" => $request->password
-        ])) {
+        try {
+            $request->validate([
+                "email" => "required|email",
+                "password" => "required"
+            ]);
+    
+            // create error handle if your login fails
+    
+            /**
+             * IMPORTANT|! if the twillio credential (for user otp) are ready, uncomment this and 
+             * comment out the rest  others below. 
+             * 
+             * if the commented method fails, then convert the variable being pass using the 'with' 
+             * method to route parameters
+            */ 
+            // return redirect()->route('otp.generate')->with([
+            //     'email' => $request->email, 
+            //     'password' => $request->password
+            // ]);
+    
             
+            // if the twillio credential are ready then comment/delete these codes below
+            if (!Auth::attempt([
+                "email" => $request->email,
+                "password" => $request->password
+            ])) {
+                
+                throw new AuthenticationException();
+                
+            }
+
             $user = Auth::user();
             $token = $user->createToken("myToken")->accessToken;
 
@@ -97,60 +121,124 @@ class ApiController extends Controller
                 "message" => "Login successful",
                 "access_token" => $token
             ]);
+        
+        } catch(\Throwable $throwable) {
+            $message = $throwable->getMessage();
+            if ($throwable instanceof ValidationException) {
+                $message = "please fill the provided fields";
+            }
+
+            if ($throwable instanceof AuthenticationException) {
+                $message = "invalid credentials";
+            }
+
+            return response()->json([
+                "status" => false,
+                "message" => $message
+            ]);
         }
 
-        return response()->json([
-            "status" => false,
-            "message" => "Invalid credentials"
-        ]);
+        
     }
 
     // Profile Api (GET)
     public function profile() {
-        $userdata = Auth::user();
+        try {
+            $userdata = Auth::user();
 
-        return response()->json([
-            "status" => true,
-            "message" => "Profile data",
-            "data" => $userdata
-        ]);
+            return response()->json([
+                "status" => true,
+                "message" => "Profile data",
+                "data" => $userdata
+            ]);
+        
+        } catch (\Throwable $throwable) {
+            $message = $throwable->getMessage();
+            return response()->json([
+                "status" => false,
+                "message" => $message
+            ]);
+        }
+        
     }
 
     // Edit user profile 
     public function profileEdit(Request $request) {
-        // "first_name" => 'required',
-        // "last_name" => 'required',
-        // "date_of_birth" => 'required',
-        // "zip_code" => "required",
-        // "email" => "required|email|unique:users",
-        // "password" => "required|confirmed",
+        try {
+            $userdata = Auth::user();
 
-        $userdata = Auth::user();
+            if (!$userdata) {
+                throw new AuthorizationException();
+            }
 
-        // This method works but it does resaves everything in the database
-        // whereas the other alternative below tho is longer but is only changes
-        // row data where the particular request was entered
-        Auth::user()->update([
-            "name" => $request->name ?? $userdata->name,
-            "email" => $request->email ?? $userdata->email,
-            "password" => $request->password ?? $userdata->password,
-            "phone_no" => $request->phone_no ?? $userdata->phone_no,
-            "zip_code" => $request->zip_code ?? $userdata->zip_code,
-            "date_of_birth" => $request->date_of_birth ?? $userdata->date_of_birth
-        ]);
+            // This method works but it does resaves everything in the database
+            // whereas the other alternative below tho is longer but is only changes
+            // row data where the particular request was entered
+            Auth::user()->update([
+                "name" => $request->name ?? $userdata->name,
+                "email" => $request->email ?? $userdata->email,
+                "password" => $request->password ?? $userdata->password,
+                "phone_number" => $request->phone_number ?? $userdata->phone_number,
+                "zip_code" => $request->zip_code ?? $userdata->zip_code,
+                "date_of_birth" => $request->date_of_birth ?? $userdata->date_of_birth
+            ]);
+
+            
+            /* 
+                alternative is below is longer but only queries the database for only
+                information that was entered by user to change
+            */
+        
+
+            $userUpdated = Auth::user();
+
+            return response()->json([
+                "updatedUser" => $userUpdated
+            ]);
+
+        } catch (\Throwable $throwable) {
+            $message = $e->getMessage();
+
+            if ($e instanceof AuthorizationException) {
+                $message = 'not authorized';
+            }
+
+            if ($e instanceof ValidationException) {
+                $message = 'error in form data';
+            }
+
+            if (strpos($e->getMessage(), 'SQLSTATE') !== false) {
+                preg_match("/for column '(.+)' at row \d+/", $e->getMessage(), $matches);
+                $columnName = $matches[1];
+
+                preg_match("/Incorrect (.+) value: '(.+)' for/", $e->getMessage(), $matches);
+                $enteredValue = $matches[2];
+                $wrongType = $matches[1];
+
+                // Get the right type the column accepts (you may need to query the database schema for this)
+                $rightType = 'boolean'; // Assuming 'favorite' column accepts boolean values
+
+                // Format the error message
+                $errorMessage = "Error: Incorrect value for field '{$columnName}'. ";
+                $errorMessage .= "Entered value '{$enteredValue}' is of wrong type '{$wrongType}'. ";
+                $errorMessage .= "field '{$columnName}' expects '{$rightType}' type.";
+
+                // Return the formatted error message as JSON
+                return response()->json([
+                    'status' => 'failed', 
+                    'message' => $errorMessage
+                ], 500);
+                
+
+            }
+
+            return response()->json([
+                'status'=> 'failed',
+                'message' => $message
+            ]);
+        }
 
         
-        /* 
-            alternative is below is longer but only queries the database for only
-            information that was entered by user to change
-        */
-       
-
-        $userUpdated = Auth::user();
-
-        return response()->json([
-            "updatedUser" => $userUpdated
-        ]);
     }
     public function logout() {
         
@@ -171,7 +259,7 @@ class ApiController extends Controller
         // Auth::user()
         auth()->user()->delete();
        
-        response()->json([
+        return response()->json([
             "status" => true,
             "message" => "User created successfully"
         ]);
@@ -180,155 +268,321 @@ class ApiController extends Controller
 
     // all inventories page
     public function inventories() {
-        $user = Auth::user();
-        
-        // Incase you want to display all items including the archived ones,
-        // then comment the  code directly below and uncomment the following one
-        $items = Item::where('user_id', $user->id)->where('archived', false);
-        // $items = Item::where('user_id', $user->id)
 
-        // IMPORTANT!!!  do not alter the order of the following calculation below
-        // as this is a query chain and it could affect what is returned
-        $itemsCount = $items->count(); // or count($items)
-        $itemsTotal = $items->sum('price');// items sum
-        $favoriteItemsCount = $items->where('favorite', true)->count(); 
+        try {
+            $user = Auth::user();
+
+            if(!$user) {
+                throw new AuthenticationException();
+            }
         
-        return response()->json([
-            'itemsCount'=> $itemsCount,
-            'favoriteItemsCount'=> $favoriteItemsCount,
-            'itemsTotal' => $itemsTotal
-        ]);
+            // Incase you want to display all items including the archived ones,
+            // then comment the  code directly below and uncomment the following one
+            $items = Item::where('user_id', $user->id)->where('archived', false);
+            // $items = Item::where('user_id', $user->id)
+
+            // IMPORTANT!!!  do not alter the order of the following calculation below
+            // as this is a query chain and it could affect what is returned
+            $itemsCount = $items->count(); // or count($items)
+            $itemsTotal = $items->sum('price');// items sum
+            $favoriteItemsCount = $items->where('favorite', true)->count(); 
+            
+            return response()->json([
+                'itemsCount'=> $itemsCount,
+                'favoriteItemsCount'=> $favoriteItemsCount,
+                'itemsTotal' => $itemsTotal
+            ]);
+        
+        } catch(Exception $exception) {
+            $message = $exception->getMessage();
+            
+            if ($exception instanceof AuthenticationException) {
+               $message = 'user is not authenticated';
+            }
+
+            return response()->json([
+                'status' => 'failed',
+                'message' => $message
+            ]);
+    
+        }
+        
     
     }
 
     public function items() {
-        $user = Auth::user();
+        try {
+            $user = Auth::user();
 
-        // Incase you want to display all items including the archived ones,
-        // then comment the  code directly below and uncomment the following one
+            // Incase you want to display all items including the archived ones,
+            // then comment the  code directly below and uncomment the following one
+    
+            $items = Item::where('user_id', $user->id)->where('archived', false)->select(['title', 'subtitle', 'created_at', 'id'])->get();
+           // $items = Item::where('user_id', $user->id)->select(['title', 'subtitle', 'created_at', 'id'])->get();
+            return response()->json($items);
+        
+        } catch(\Throwable $throwable) {
+            $message = $throwable->getMessage();
 
-        $items = Item::where('user_id', $user->id)->where('archived', false)->select(['title', 'subtitle', 'created_at', 'id'])->get();
-       // $items = Item::where('user_id', $user->id)->select(['title', 'subtitle', 'created_at', 'id'])->get();
-        return response()->json($items);
+            if ($throwable instanceof AuthenticationException) {
+                $message = "user is unauthenticated";
+            }
+
+            response()->json([
+                'status' => 'failed',
+                'message' => $message
+            ]);
+
+
+        }
+       
     }
 
     public function addItem(Request $request){
-        $user = Auth::user();
+        try {
+
+            $user = Auth::user();
+
+            //remember to create an error handler if category name does not exist
+            $category = Category::where('name', $request->categoryName)->first();
+            
+            $item = Item::create([
+            'category_id' => $category->id,
+            'user_id' => $user->id,
+            'title' => $request->title ?? '',
+            'subtitle' => $request->subtitle ?? '',
+            'description' => $request->description ?? '',
+            'price' => $request->price ?? 0,
+            'product_name' => $request->productName,
+            'serial_number' => $request->serialNumber,
+            'product_number' => $request->productNumber,
+            'lot_number' => $request->lotNumber,
+            'barcode' => $request->barcode,
+            'weight' => $request->weight,
+            'dimension' => $request->dimensions,
+            'warranty_length' => $request->warrantyLength,
+            'archived' => false
+            ]);
+            
+
+            return response()->json([
+                "status"=> "succesful",
+                "item" => $item
+            ]);
+
+        } catch (\Throwable $throwable) {
+            $message = $throwable->getMessage();
+            return response()->json([
+                'status' => "failed",
+                'message' => $message
+            ]);
+        }
         
-
-
-        // Important!!! this method is meant to create a new item when a barcode is scanned
-        // I could tell which fields where optional and which were required, when this has been
-        // decided pls remove the request->all() method and convert to the appropriate 
-        // input field as shown in the commented section below
-
-        $item = Item::create([...$request->all(), 'user_id' => $user->id]);
-
-          
-        // $item = $item->update([
-        //     'title' => $request->title,
-        //     'subtitle' => $request->subtitle,
-        //     'description' => $request->description,
-        //     'favorite' => $request->markedfavorite,
-        //     'archived' => $request->archived,
-        //     'product_name' => $request->productName,
-        //     'product_number'=> $request->productNumber,
-        //     'lot_number' => $request->lotNumber ,
-        //     'barcode' => $request->barcode 
-        //     'weight'=> $request->weight        
-        //     'dimension' => $request->dimension 
-        // ]);
-
-        return response()->json([
-            "status"=> "succesful",
-            "item" => $item
-        ]);
     }
 
     public function addCategory(Request $request) {
-        $request->validate([
-            "name" => 'required',
-        ]);
+        try {
+            $request->validate([
+                "name" => 'required',
+            ]);
 
-        $category = Category::create(["name"=>$request->name]);
-       
+            $category = Category::create(["name"=>$request->name]);
+        
+            return response()->json([
+                "status" => "successfully",
+                "category" => $category
+            ]);
 
-        return response()->json([
-            "status" => "successfully",
-            "category" => $category
-        ]);
+        } catch (\Throwable $throwable) {
+            $message = $throwable->getMessage();
+            return response()->json([
+                'status' => "failed",
+                'message' => $message
+            ]);
+        }
     }
 
     public function favorite() {
+        try {
+            $user = Auth::user();
+            $favoriteItems = Item::where('user_id', $user->id)
+                ->where('favorite', true)
+                ->select(['title', 'subtitle', 'created_at', 'id'])->get();
+                
+            return response()->json($favoriteItems);
 
-        $user = Auth::user();
-
-        $favoriteItems = Item::where('user_id', $user->id)
-            ->where('favorite', true)
-            ->select(['title', 'subtitle', 'created_at', 'id'])->get();
-            
-        return response()->json($favoriteItems);
+        } catch (\Throwable $throwable) {
+            $message = $throwable->getMessage();
+            return response()->json([
+                'status' => "failed",
+                'message' => $message
+            ]);
+        }
+        
     }
 
 
-    public function item(Item $item) {
-        $itemOwnerId  = $item->user_id;
-        $user = Auth::user();
-        
-        if ( $itemOwnerId !== $user->id ) {
-            return response()->json([
-                'status' => 'failed',
-                'message' => "not authorized"
-            ]);
-        }
+    public function item($item) {
+        try {
+            $item = Item::find($item);
 
-        return response()->json([
-            'item' => $item
-        ]);
+            if (!$item) {
+                throw new ModelNotFoundException('Item does not exist');
+            }
+
+            $itemOwnerId  = $item->user_id;
+            $user = Auth::user();
+
+            if (!$user) {
+                throw new AuthorizationException('not authorized');
+
+            }
+            
+            if ( $itemOwnerId !== $user->id ) {
+                throw new AuthenticationException('not authorized');
+                // return response()->json([
+                //     'status' => 'failed',
+                //     'message' => "not authorized"
+                // ]);
+            }
+    
+            return response()->json([
+                'status' => 'success',
+                'item' => $item
+            ]);
+
+        } catch(\Throwable $exception) {
+            $message = $exception->getMessage();
+
+            if($exception instanceof ModelNotFoundException) {
+                $message = 'Item does not exist';
+            }
+
+            if ($exception instanceof AuthenticationException) {
+                $message = 'not authorized';
+            }
+
+            return response()->json([
+                'status'=> 'failed',
+                'message' => $message
+            ]);
+
+        }
        
     }
 
 
     public function updateItem(Request $request, Item $item) {
-        
-        $itemOwnerId  = $item->user_id;
-        $user = Auth::user();
+        try {
+            $itemOwnerId  = $item->user_id;
+            $user = Auth::user();
 
-        if ( $itemOwnerId !== $user->id ) {
+            if ( $itemOwnerId !== $user->id ) {
+                throw new AuthorizationException();
+
+                // return response()->json([
+                //     'status' => 'failed',
+                //     'message' => "not authorized"
+                // ]);
+            }
+        
+            $item = $item->update([
+                'title' => $request->title ?? $item->title,
+                'subtitle' => $request->subtitle ?? $item->subtitle,
+                'description' => $request->description ?? $item->description,
+                'favorite' => $request->favorite ?? $item->favorite,
+                'archived' => $request->archived ?? $item->archived,
+                'product_name' => $request->productName ?? $item->product_name,
+                'product_number'=> $request->productNumber ?? $item->product_number,
+                'serial_number'=> $request->serialNumber ?? $item->serial_number,
+                'lot_number' => $request->lotNumber ?? $item->lot_number,
+                'barcode' => $request->barcode ?? $item->barcode,
+                'weight'=> $request->weight ?? $item->weight,
+                'dimension' => $request->dimension ?? $item->dimension,
+                'warranty_length' => $request->weight ?? $item->dimension,
+            ]);
+
+
+            return response()->json([$item]);
+
+        } catch (\Throwable $throwable) {
+            $message = $throwable->getMessage();
+
+            if ($throwable instanceof AuthorizationException) {
+                $message = 'not authorized';
+            }
+
+            if ($throwable instanceof ValidationException) {
+                $message = 'error in form data';
+            }
+
+            if (strpos($throwable->getMessage(), 'SQLSTATE') !== false) {
+                preg_match("/for column '(.+)' at row \d+/", $throwable->getMessage(), $matches);
+                $columnName = $matches[1];
+
+                preg_match("/Incorrect (.+) value: '(.+)' for/", $throwable->getMessage(), $matches);
+                $enteredValue = $matches[2];
+                $wrongType = $matches[1];
+
+                // Get the right type the column accepts (you may need to query the database schema for this)
+                $rightType = 'boolean'; // Assuming 'favorite' column accepts boolean values
+
+                // Format the error message
+                $errorMessage = "Error: Incorrect value for field '{$columnName}'. ";
+                $errorMessage .= "Entered value '{$enteredValue}' is of wrong type '{$wrongType}'. ";
+                $errorMessage .= "field '{$columnName}' expects '{$rightType}' type.";
+
+                // Return the formatted error message as JSON
+                return response()->json(['status' => 'failed', 'message' => $errorMessage], 500);
+
+                        // return response()->json([
+                        //     'status'=> 'failed',
+                        //     'message' => $message
+                        // ]);
+
+
+            }
+
             return response()->json([
-                'status' => 'failed',
-                'message' => "not authorized"
+                'status'=> 'failed',
+                'message' => $message
             ]);
         }
-        
-        $item = $item->update([
-            'title' => $request->title ?? $item->title,
-            'subtitle' => $request->subtitle ?? $item->subtitle,
-            'description' => $request->description ?? $item->description,
-            'favorite' => $request->markedfavorite ?? $item->favorite,
-            'archived' => $request->archived ?? $item->archived,
-            'product_name' => $request->productName ?? $item->product_name,
-            'product_number'=> $request->productNumber ?? $item->product_number,
-            'lot_number' => $request->lotNumber ?? $item->lot_number,
-            'barcode' => $request->barcode ?? $item->barcode,
-            'weight'=> $request->weight ?? $item->weight,
-            'dimension' => $request->dimension ?? $item->dimension,
-            'warranty_length' => $request->weight ?? $item->dimension,
-        ]);
 
-        return response()->json([$item]);
+    
+        
 
     }
 
     public function archivedItem() {
-        $user = Auth::user();
+        try {
+            $user = Auth::user();
 
-        $archItem = Item::where('user_id', $user->id)
-            ->where('archived', true)
-            ->select(['title', 'subtitle', 'created_at', 'id'])
-            ->get();
+            if (!$user) {
+                throw new AuthorizationException('not authorized');
 
-        return response()->json($archItem);
+            }
+
+            $archItem = Item::where('user_id', $user->id)
+                ->where('archived', true)
+                ->select(['title', 'subtitle', 'created_at', 'id'])
+                ->get();
+    
+            return response()->json($archItem);
+
+        } catch (\Throwable $throwable) {
+            $message = $throwable->getMessage();
+            
+            if ($throwable instanceof AuthenticationException) {
+               $message = 'user is not authenticated';
+            }
+
+            response()->json([
+                'status' => 'failed',
+                'message' => $message
+            ]);
+        }
+        
     }
 
     public function estimatedItem(){
@@ -345,101 +599,108 @@ class ApiController extends Controller
         // this is considered the most optimized method from all the methods listed
         // there are severally method below, you can use to just uncomment them as you please
         // 
-        
-        $categoriesWithCount = Item::with('category')
-            ->select('category_id', \DB::raw('COUNT(*) as item_count'))
-            ->where('user_id', auth()->id())
-            ->groupBy('category_id')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'category_name' => $item->category->name ?? null,
-                    'item_count' => $item->item_count,
-                ];
-            });
+        try {
+            $categoriesWithCount = Item::with('category')
+                ->select('category_id', \DB::raw('COUNT(*) as item_count'))
+                ->where('user_id', auth()->id())
+                ->groupBy('category_id')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'category_name' => $item->category->name ?? null,
+                        'item_count' => $item->item_count,
+                    ];
+                });
 
-        return response()->json($categoriesWithCount);
+            return response()->json($categoriesWithCount);
 
-        // below as some other methods that work but the above is considered the most
-        // optimized method
-        
+            // below as some other methods that work but the above is considered the most
+            // optimized method
             
-            // $helperArr = [];
-            // $categories = Category::with('items')->get(); // Eager load items relationship
-
-            // $categories->each(function ($category) use (&$helperArr) {
-            //     $itemCount = $category->items->filter(function ($item) {
-            //         return auth()->id() == $item->user_id;
-            //     })->count();
-
-            //     if ($itemCount > 0) {
-            //         $helperArr[] = [
-            //             "categoryName" => $category->name,
-            //             "itemCount" => $itemCount
-            //         ];
-            //     }
-            // });
-
-            // return response()->json($helperArr);
-
-        
-        
-        // this also works too
-        /*
-            $helperArr = [];
-            $categories = Category::all();
-
-            $itemCount = 0;
-            
-            // iterate for each category Name
-            foreach($categories as $category) {
                 
-                $itemsLength = count($category->items);
+                // $helperArr = [];
+                // $categories = Category::with('items')->get(); // Eager load items relationship
+
+                // $categories->each(function ($category) use (&$helperArr) {
+                //     $itemCount = $category->items->filter(function ($item) {
+                //         return auth()->id() == $item->user_id;
+                //     })->count();
+
+                //     if ($itemCount > 0) {
+                //         $helperArr[] = [
+                //             "categoryName" => $category->name,
+                //             "itemCount" => $itemCount
+                //         ];
+                //     }
+                // });
+
+                // return response()->json($helperArr);
+
             
-                for ($i= 0; $i < $itemsLength; $i++) {
+            
+            // this also works too
+            /*
+                $helperArr = [];
+                $categories = Category::all();
+
+                $itemCount = 0;
+                
+                // iterate for each category Name
+                foreach($categories as $category) {
                     
-                    // we validate that that has has the right user_id
+                    $itemsLength = count($category->items);
+                
+                    for ($i= 0; $i < $itemsLength; $i++) {
                         
-                    if (auth()->id() == $category->items[$i]->user_id) {
-                        //take the Category name
-                        $itemCount = $itemCount + 1;
-                        if ($i == $itemsLength - 1) {
-                            $helperArr[] = ["categoryName" => $category->name, "itemCount" => $itemCount ];
-                            $itemCount = 0;
+                        // we validate that that has has the right user_id
+                            
+                        if (auth()->id() == $category->items[$i]->user_id) {
+                            //take the Category name
+                            $itemCount = $itemCount + 1;
+                            if ($i == $itemsLength - 1) {
+                                $helperArr[] = ["categoryName" => $category->name, "itemCount" => $itemCount ];
+                                $itemCount = 0;
+                            }
+
+
                         }
-
-
                     }
-                }
-            } 
+                } 
 
-            return  response()->json($helperArr); 
+                return  response()->json($helperArr); 
+            
+
+            /*
+                //This code works, it is a shorter way to do things 
+                //but it the frontend dev will have to iterate over it and sum the items for 
+                //each catergory name
+
+            $items = Item::with('category')->where('user_id', auth()->id())->get();
+
+
+                $data = $items->map(function ($item) {
+                    return [
+                        'item_id' => $item->id,
+                        'item_name' => $item->title, // Assuming item has a 'name' attribute
+                        'category_name' => $item->category->name ?? null, 
+                    ];
+                });
+
         
+                return response()->json($data);
 
-        /*
-            //This code works, it is a shorter way to do things 
-            //but it the frontend dev will have to iterate over it and sum the items for 
-            //each catergory name
+            */
+        } catch (\Throwable $throwable) {
+            $message = $throwable->getMessage();
+            
+            return response()->json([
+                'status'=> 'failed',
+                'message' => $message
+            ]);
 
-           $items = Item::with('category')->where('user_id', auth()->id())->get();
-
-
-            $data = $items->map(function ($item) {
-                return [
-                    'item_id' => $item->id,
-                    'item_name' => $item->title, // Assuming item has a 'name' attribute
-                    'category_name' => $item->category->name ?? null, 
-                ];
-            });
-
-       
-            return response()->json($data);
-
-        */
+        }
    
        
     }
-
-
 
 }

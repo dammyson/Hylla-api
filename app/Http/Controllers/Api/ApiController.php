@@ -65,7 +65,7 @@ class ApiController extends Controller
             return response()->json([
                 "status" => true,
                 "message" => "User created successfully"
-            ]);
+            ], 201);
         
         } catch(\Throwable $throwable) {
             $message = $throwable->getMessage();
@@ -73,7 +73,7 @@ class ApiController extends Controller
             return response()->json([
                 "status" => 'failed',
                 "message" => $message
-            ]);
+            ], 422);
         }
 
         
@@ -120,22 +120,27 @@ class ApiController extends Controller
                 "status" => true,
                 "message" => "Login successful",
                 "access_token" => $token
-            ]);
+            ], 201);
         
         } catch(\Throwable $throwable) {
             $message = $throwable->getMessage();
+            $statusCode = 500;
+
             if ($throwable instanceof ValidationException) {
                 $message = "please fill the provided fields";
+                $statusCode = 422;
             }
 
             if ($throwable instanceof AuthenticationException) {
                 $message = "invalid credentials";
+                $statusCode = 401;
+
             }
 
             return response()->json([
                 "status" => false,
                 "message" => $message
-            ]);
+            ], $statusCode);
         }
 
         
@@ -150,14 +155,14 @@ class ApiController extends Controller
                 "status" => true,
                 "message" => "Profile data",
                 "data" => $userdata
-            ]);
+            ], 200);
         
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();
             return response()->json([
                 "status" => false,
-                "message" => $message
-            ]);
+                "message" => $message,
+            ], 401);
         }
         
     }
@@ -194,24 +199,27 @@ class ApiController extends Controller
 
             return response()->json([
                 "updatedUser" => $userUpdated
-            ]);
+            ], 200);
 
         } catch (\Throwable $throwable) {
-            $message = $e->getMessage();
+            $message = $throwable->getMessage();
+            $statusCode = 500;
 
-            if ($e instanceof AuthorizationException) {
+            if ($throwable instanceof AuthorizationException) {
                 $message = 'not authorized';
+                $statusCode = 403;
             }
 
-            if ($e instanceof ValidationException) {
+            if ($throwable instanceof ValidationException) {
                 $message = 'error in form data';
+                $statusCode = 422;
             }
 
-            if (strpos($e->getMessage(), 'SQLSTATE') !== false) {
-                preg_match("/for column '(.+)' at row \d+/", $e->getMessage(), $matches);
+            if (strpos($throwable->getMessage(), 'SQLSTATE') !== false) {
+                preg_match("/for column '(.+)' at row \d+/", $throwable->getMessage(), $matches);
                 $columnName = $matches[1];
 
-                preg_match("/Incorrect (.+) value: '(.+)' for/", $e->getMessage(), $matches);
+                preg_match("/Incorrect (.+) value: '(.+)' for/", $throwable->getMessage(), $matches);
                 $enteredValue = $matches[2];
                 $wrongType = $matches[1];
 
@@ -227,7 +235,7 @@ class ApiController extends Controller
                 return response()->json([
                     'status' => 'failed', 
                     'message' => $errorMessage
-                ], 500);
+                ], 422);
                 
 
             }
@@ -235,19 +243,26 @@ class ApiController extends Controller
             return response()->json([
                 'status'=> 'failed',
                 'message' => $message
-            ]);
+            ], $statusCode);
         }
 
         
     }
     public function logout() {
+        try {
+            auth()->user()->token()->revoke();
+    
+            return response()->json([
+                "status" => true,
+                "message" => "User logged out"
+            ], 200);
         
-        auth()->user()->token()->revoke();
-
-        return response()->json([
-            "status" => true,
-            "message" => "User logged out"
-        ]);
+        } catch (\Throwable $throwable) {
+            return response()->json([
+                'status'=> 'failed',
+                'message' => "failed to log user out"
+            ], 500);
+        }
 
     }
 
@@ -256,13 +271,22 @@ class ApiController extends Controller
     // to an admin to be able to delete the account in case we later
     // need information from this account
     public function deleteAccount() {
-        // Auth::user()
+        try {
+            // Auth::user()
         auth()->user()->delete();
        
-        return response()->json([
-            "status" => true,
-            "message" => "User created successfully"
-        ]);
+            return response()->json([
+                "status" => true,
+                "message" => "User account deleted successfully"
+            ]);
+
+        } catch (\Throwable $throwable) {
+            return response()->json([
+                'status'=> 'failed',
+                'message' => "failed to delete user account"
+            ], 500);
+        }
+        
     }
 
 
@@ -291,19 +315,22 @@ class ApiController extends Controller
                 'itemsCount'=> $itemsCount,
                 'favoriteItemsCount'=> $favoriteItemsCount,
                 'itemsTotal' => $itemsTotal
-            ]);
+            ], 200);
         
         } catch(Exception $exception) {
             $message = $exception->getMessage();
+            $statusCode = 500;
             
             if ($exception instanceof AuthenticationException) {
                $message = 'user is not authenticated';
+               $statusCode = 401;
             }
 
             return response()->json([
                 'status' => 'failed',
                 'message' => $message
-            ]);
+
+            ], $statusCode);
     
         }
         
@@ -319,19 +346,20 @@ class ApiController extends Controller
     
             $items = Item::where('user_id', $user->id)->where('archived', false)->select(['title', 'subtitle', 'created_at', 'id'])->get();
            // $items = Item::where('user_id', $user->id)->select(['title', 'subtitle', 'created_at', 'id'])->get();
-            return response()->json($items);
+            return response()->json($items, 200);
         
         } catch(\Throwable $throwable) {
             $message = $throwable->getMessage();
-
+            $statusCode = 500;
             if ($throwable instanceof AuthenticationException) {
                 $message = "user is unauthenticated";
+                $statusCode = 401;
             }
 
             response()->json([
                 'status' => 'failed',
                 'message' => $message
-            ]);
+            ], $statusCode);
 
 
         }
@@ -347,35 +375,46 @@ class ApiController extends Controller
             $category = Category::where('name', $request->categoryName)->first();
             
             $item = Item::create([
-            'category_id' => $category->id,
-            'user_id' => $user->id,
-            'title' => $request->title ?? '',
-            'subtitle' => $request->subtitle ?? '',
-            'description' => $request->description ?? '',
-            'price' => $request->price ?? 0,
-            'product_name' => $request->productName,
-            'serial_number' => $request->serialNumber,
-            'product_number' => $request->productNumber,
-            'lot_number' => $request->lotNumber,
-            'barcode' => $request->barcode,
-            'weight' => $request->weight,
-            'dimension' => $request->dimensions,
-            'warranty_length' => $request->warrantyLength,
-            'archived' => false
+                'category_id' => $category->id,
+                'user_id' => $user->id,
+                'title' => $request->title ?? '',
+                'subtitle' => $request->subtitle ?? '',
+                'description' => $request->description ?? '',
+                'price' => $request->price ?? 0,
+                'product_name' => $request->productName,
+                'serial_number' => $request->serialNumber,
+                'product_number' => $request->productNumber,
+                'lot_number' => $request->lotNumber,
+                'barcode' => $request->barcode,
+                'weight' => $request->weight,
+                'dimension' => $request->dimensions,
+                'warranty_length' => $request->warrantyLength,
+                'archived' => false
             ]);
             
 
             return response()->json([
                 "status"=> "succesful",
                 "item" => $item
-            ]);
+            ], 200);
 
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();
+            $statusCode = 500;
+            
+            if ($exception instanceof AuthenticationException) {
+                $message = 'user is not authenticated';
+                $statusCode = 401;
+            }
+            
+            else if ( $exception instanceof ValidationException) {
+                $message = 'invalid data type pls fill the input field correctly';
+                $statusCode = 422;
+            }
             return response()->json([
                 'status' => "failed",
                 'message' => $message
-            ]);
+            ], $statusCode);
         }
         
     }
@@ -391,14 +430,24 @@ class ApiController extends Controller
             return response()->json([
                 "status" => "successfully",
                 "category" => $category
-            ]);
+            ], 200);
 
         } catch (\Throwable $throwable) {
-            $message = $throwable->getMessage();
+            $statusCode = 500;
+            
+            if ($exception instanceof AuthenticationException) {
+                $message = 'user is not authenticated';
+                $statusCode = 401;
+            }
+            
+            else if ( $exception instanceof ValidationException) {
+                $message = 'invalid data type pls fill the input field correctly';
+                $statusCode = 422;
+            }
             return response()->json([
                 'status' => "failed",
                 'message' => $message
-            ]);
+            ], $statusCode);
         }
     }
 
@@ -409,14 +458,25 @@ class ApiController extends Controller
                 ->where('favorite', true)
                 ->select(['title', 'subtitle', 'created_at', 'id'])->get();
                 
-            return response()->json($favoriteItems);
+            return response()->json($favoriteItems, 200);
 
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();
+            $statusCode = 500;
+            
+            if ($exception instanceof AuthenticationException) {
+                $message = 'user is not authenticated';
+                $statusCode = 401;
+            
+            } else if ( $exception instanceof ValidationException) {
+                $message = 'invalid data type pls fill the input field correctly';
+                $statusCode = 422;
+            }
+
             return response()->json([
                 'status' => "failed",
                 'message' => $message
-            ]);
+            ], $statusCode);
         }
         
     }
@@ -453,19 +513,22 @@ class ApiController extends Controller
 
         } catch(\Throwable $exception) {
             $message = $exception->getMessage();
+            $statusCode = 500;
 
             if($exception instanceof ModelNotFoundException) {
                 $message = 'Item does not exist';
+                $statusCode = 404;
             }
 
             if ($exception instanceof AuthenticationException) {
                 $message = 'not authorized';
+                $statusCode = 401;
             }
 
             return response()->json([
                 'status'=> 'failed',
                 'message' => $message
-            ]);
+            ], $statusCode);
 
         }
        
@@ -503,17 +566,20 @@ class ApiController extends Controller
             ]);
 
 
-            return response()->json([$item]);
+            return response()->json([$item], 200);
 
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();
+            $statusCode = 500;
 
             if ($throwable instanceof AuthorizationException) {
                 $message = 'not authorized';
+                $statusCode = 401;
             }
 
             if ($throwable instanceof ValidationException) {
                 $message = 'error in form data';
+                $statusCode = 422;
             }
 
             if (strpos($throwable->getMessage(), 'SQLSTATE') !== false) {
@@ -533,7 +599,7 @@ class ApiController extends Controller
                 $errorMessage .= "field '{$columnName}' expects '{$rightType}' type.";
 
                 // Return the formatted error message as JSON
-                return response()->json(['status' => 'failed', 'message' => $errorMessage], 500);
+                return response()->json(['status' => 'failed', 'message' => $errorMessage], 422);
 
                         // return response()->json([
                         //     'status'=> 'failed',
@@ -546,7 +612,7 @@ class ApiController extends Controller
             return response()->json([
                 'status'=> 'failed',
                 'message' => $message
-            ]);
+            ], $statusCode);
         }
 
     
@@ -568,30 +634,55 @@ class ApiController extends Controller
                 ->select(['title', 'subtitle', 'created_at', 'id'])
                 ->get();
     
-            return response()->json($archItem);
+            return response()->json($archItem, 200);
 
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();
-            
+            $statusCode = 500;
+
             if ($throwable instanceof AuthenticationException) {
                $message = 'user is not authenticated';
+               $statusCode = 401;
             }
 
             response()->json([
                 'status' => 'failed',
                 'message' => $message
-            ]);
+            ], $statusCode);
         }
         
     }
 
     public function estimatedItem(){
-        $items = Item::where('user_id', Auth::user()->id)
-            ->select(['title', 'description', 'created_at', 'price'])
-            ->orderBy('price', 'desc')
-            ->get();
+        try {
+            $user = Auth::user();
 
-        return response()->json($items);
+            if (!$user) {
+                throw new AuthorizationException('not authorized');
+
+            }
+
+            $items = Item::where('user_id', Auth::user()->id)
+                ->select(['title', 'description', 'created_at', 'price'])
+                ->orderBy('price', 'desc')
+                ->get();
+    
+            return response()->json($items, 200);
+
+        } catch (\Throwable $throwable) {
+            $message = $throwable->getMessage();
+            $statusCode = 500;
+
+            if ($throwable instanceof AuthenticationException) {
+               $message = 'user is not authenticated';
+               $statusCode = 401;
+            }
+
+            response()->json([
+                'status' => 'failed',
+                'message' => $message
+            ], $statusCode);
+        }
     }
 
     public function 
@@ -600,6 +691,13 @@ class ApiController extends Controller
         // there are severally method below, you can use to just uncomment them as you please
         // 
         try {
+            $user = Auth::user();
+
+            if (!$user) {
+                throw new AuthorizationException('not authorized');
+
+            }
+
             $categoriesWithCount = Item::with('category')
                 ->select('category_id', \DB::raw('COUNT(*) as item_count'))
                 ->where('user_id', auth()->id())
@@ -692,11 +790,17 @@ class ApiController extends Controller
             */
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();
-            
+            $statusCode = 500;
+
+            if ($throwable instanceof AuthenticationException) {
+                $message = 'user is not authenticated';
+                $statusCode = 401;
+            }
+
             return response()->json([
                 'status'=> 'failed',
                 'message' => $message
-            ]);
+            ], $statusCode);
 
         }
    

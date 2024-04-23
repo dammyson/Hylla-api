@@ -64,11 +64,17 @@ class FilterController extends Controller
             };
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();
+            $statusCode = 500;
+
+            if ($throwable instanceof AuthorizationException) {
+                $message = 'not authorized';
+                $statusCode = 403;
+            }
             
             return response()->json([
                 'status' => 'failed',
                 'message' => $message
-            ]);
+            ], $statusCode);
 
         }
     }

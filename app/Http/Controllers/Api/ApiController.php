@@ -369,11 +369,19 @@ class ApiController extends Controller
     public function addItem(Request $request){
         try {
 
+            $request->validate([
+                "categoryName" => 'required',
+            ]);
+
             $user = Auth::user();
 
             //remember to create an error handler if category name does not exist
             $category = Category::where('name', $request->categoryName)->first();
             
+            if (!$category) {
+                throw new ModelNotFoundException();
+            }
+
             $item = Item::create([
                 'category_id' => $category->id,
                 'user_id' => $user->id,
@@ -402,14 +410,18 @@ class ApiController extends Controller
             $message = $throwable->getMessage();
             $statusCode = 500;
             
-            if ($exception instanceof AuthenticationException) {
+            if ($throwable instanceof AuthenticationException) {
                 $message = 'user is not authenticated';
                 $statusCode = 401;
             }
             
-            else if ( $exception instanceof ValidationException) {
-                $message = 'invalid data type pls fill the input field correctly';
+            else if ($throwable instanceof ValidationException) {
+                $message = 'invalid data type pls fill the input field correctly also make sure to include the category name';
                 $statusCode = 422;
+            
+            } else if ($throwable instanceof ModelNotFoundException) {
+                $message = 'Category not found';
+                $statusCode = 404;
             }
             return response()->json([
                 'status' => "failed",
@@ -624,9 +636,8 @@ class ApiController extends Controller
         try {
             $user = Auth::user();
 
-            if (!$user) {
-                throw new AuthorizationException('not authorized');
-
+            if(!$user) {
+                throw new AuthenticationException();
             }
 
             $archItem = Item::where('user_id', $user->id)

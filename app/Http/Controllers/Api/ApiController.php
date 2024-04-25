@@ -135,7 +135,7 @@ class ApiController extends Controller
             return response()->json([
                 "status" => false,
                 "message" => $message
-            ]);
+            ], 500);
         }
 
         
@@ -339,6 +339,8 @@ class ApiController extends Controller
     }
 
     public function addItem(Request $request){
+
+        
         try {
 
             $user = Auth::user();

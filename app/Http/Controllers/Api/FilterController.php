@@ -7,6 +7,8 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Auth\Access\AuthorizationException;
+use Laravel\Passport\Exceptions\AuthenticationException;
 
 class FilterController extends Controller
 {
@@ -64,11 +66,17 @@ class FilterController extends Controller
             };
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();
+            $statusCode = 500;
+
+            if ($throwable instanceof AuthorizationException) {
+                $message = 'not authorized';
+                $statusCode = 403;
+            }
             
             return response()->json([
                 'status' => 'failed',
                 'message' => $message
-            ]);
+            ], $statusCode);
 
         }
     }
@@ -101,14 +109,20 @@ class FilterController extends Controller
             return response()->json([
                 'category' => $category,
                 'item_count' => $itemCount
-            ]);
+            ], 200);
+        
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();
-            
+            $statusCode = 500;
+
+            if ($exception instanceof AuthenticationException) {
+                $message = 'user is not authenticated';
+                $statusCode = 401;
+             }
             return response()->json([
                 'status' => 'failed',
                 'message' => $message
-            ]);
+            ], $statusCode);
 
         }
        
@@ -120,6 +134,11 @@ class FilterController extends Controller
     public function search(Request $request) {
         try {
             $user = auth()->user();
+
+            if (!$user) {
+                throw new AuthorizationException('not authorized');
+            }
+
             $item = $request->items;
         
             $items = Item::query();
@@ -144,14 +163,22 @@ class FilterController extends Controller
 
             $items = $items->get();
 
-            return response()->json($items);
+            return response()->json($items, 200);
         
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();
+            $statusCode = 500;
+
+            if ($exception instanceof AuthenticationException) {
+                $message = 'user is not authenticated';
+                $statusCode = 401;
+            }
+            
             return response()->json([
                 'status' => 'failed',
                 'message' => $message
-            ]);
+            
+            ], $statusCode);
         }
 
 

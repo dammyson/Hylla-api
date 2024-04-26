@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\User;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -35,9 +36,7 @@ class ResetPasswordController extends Controller
 
         if (!$resetPasswordToken) {
 
-            return response()->json([ 
-                "error"=> "invalid credentials"
-            ]);
+           throw new AuthenticationException('Invalid Credentials');
         }
 
         User::where("email", $request->email)->update(['password' => Hash::make($request->password)]);
@@ -49,20 +48,31 @@ class ResetPasswordController extends Controller
         $hashedPassword = Hash::make($request->password);
 
         return response()->json([
-            "username" => $updatedUser->name,
             "email" => $updatedUser->email,
             "password" => $updatedUser->password,
             "unhashedPassword" => $request->password,
             "hashedPassword" => $hashedPassword
    
-        ]);
+        ], 200);
     
     } catch (\Throwable $throwable) {
         $message = $throwable->getMessage();
+        $statusCode = 500;
+
+        if ($throwable instanceof AuthenticationException) {
+            $message = 'Invalid Credentials';
+            $statusCode = 401;
+        }
+
+        if ($throwable instanceof ValidationException) {
+            $message = 'error in form data';
+            $statusCode = 422;
+        }
         return response()->json([
             'status' => 'failed',
             'message' => $message
-        ]);
+        
+        ], $statusCode);
     }
         
 

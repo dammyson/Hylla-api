@@ -6,7 +6,9 @@ use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\FilterController;
 use App\Http\Controllers\Api\ResetPasswordController;
 use App\Http\Controllers\Api\ForgotPasswordController;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ItemController;
+use App\Http\Controllers\Api\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,24 +46,24 @@ Route::get('scan/{code}', [ItemController::class, 'scan'])->name('scan');
 Route::group([
     "middleware" => ["auth:api"]
 ], function() {
-    Route::get('inventories', [ApiController::class, 'inventories'])->name('all.inventories');
-    Route::get('inventories/items', [ApiController::class, 'items'])->name('items.index');
-    Route::post('inventories/items', [ApiController::class, 'addItem'])->name('item.add');
+    Route::get('inventories', [ItemController::class, 'inventories'])->name('all.inventories');
+    Route::get('inventories/items', [ItemController::class, 'items'])->name('items.index');
+    Route::post('inventories/items', [ItemController::class, 'addItem'])->name('item.add');
     
 
-    Route::get('inventories/items/{item}', [ApiController::class, 'item'])->name('item.show');
-    Route::put('inventories/items/{item}', [ApiController::class, 'updateItem'])->name('item.update');
+    Route::get('inventories/items/{item}', [ItemController::class, 'item'])->name('item.show');
+    Route::put('inventories/items/{item}', [ItemController::class, 'updateItem'])->name('item.update');
     
-    Route::get('inventories/favorite/items', [ApiController::class, 'favorite'])->name('items.favorite');
-    Route::get('inventories/archived/items', [ApiController::class, 'archivedItem'])->name('items.archived');
-    Route::get('inventories/estimatedItems', [ApiController::class, 'estimatedItem'])->name('items.estimated');
+    Route::get('inventories/favorite/items', [ItemController::class, 'favorite'])->name('items.favorite');
+    Route::get('inventories/archived/items', [ItemController::class, 'archivedItem'])->name('items.archived');
+    Route::get('inventories/estimatedItems', [ItemController::class, 'estimatedItem'])->name('items.estimated');
     
     // try converting the method below to a get method
     Route::post("inventories/items/search", [FilterController::class, "search"])->name('items.search');
     
 
-    Route::get('categories', [ApiController::class, 'categories'])->name('category.index');
-    Route::post('category', [ApiController::class, 'addCategory'])->name('category.add');
+    Route::get('categories', [CategoryController::class, 'categories'])->name('category.index');
+    Route::post('category', [CategoryController::class, 'addCategory'])->name('category.add');
     Route::post("categories/filterByCategoryName", [FilterController::class, "filterController"])->name('categoryfilter.name');
     Route::post("categories/filterByOrder", [FilterController::class, "orderController"])->name('categoryfilter.order');
     
@@ -75,8 +77,8 @@ Route::group([
     Route::get('/term-conditions', [ApiController::class, 'termsConditions'])->name('terms.condition');
     // Route::get("items/search/{searchParam}", [FilterController::class, "search"])->name('item.search');
     
-    Route::get("profile", [ApiController::class, "profile"])->name('profile.get');
-    Route::post("profile/edit", [ApiController::class, "profileEdit"])->name('profile.edit');
+    Route::get("profile", [ProfileController::class, "profile"])->name('profile.get');
+    Route::post("profile/edit", [ProfileController::class, "profileEdit"])->name('profile.edit');
     Route::get("logout", [ApiController::class, "logout"])->name('logout');
     Route::delete('delete', [ApiController::class, "deleteAccount"])->name('deleteAccount');
 });

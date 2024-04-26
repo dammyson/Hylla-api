@@ -85,7 +85,7 @@ class ForgotPasswordController extends Controller
                 "body" => "email sent to {{$to_email}}",
                 "token" => $token
 
-            ]);
+            ], 200);
             // return redirect()->to(route('login.get'))->with('success', "we have sent an email to reset password");
 
         }  catch (\Throwable $throwable) {
@@ -93,7 +93,7 @@ class ForgotPasswordController extends Controller
             return response()->json([
                 'status' => 'failed',
                 'message' => $message
-            ]);
+            ], 500);
         }
     }
         

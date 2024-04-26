@@ -41,7 +41,7 @@ Route::post('otp/generate', [OtpController::class, 'otpGenerate'])->name('otp.ge
 Route::get('otp/verification/{user_id}', [OtpController::class, 'otpVerification'])->name('otp.verification');
 Route::post('otp/login', [OtpController::class, 'loginWithOtp'])->name('otp.getlogin');
 
-
+Route::get('scan/{code}', [ItemController::class, 'scan'])->name('scan');
 //protected route
 Route::group([
     "middleware" => ["auth:api"]

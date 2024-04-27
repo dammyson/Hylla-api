@@ -19,7 +19,7 @@ use Laravel\Passport\Exceptions\AuthenticationException;
 
 class ItemController extends Controller
 {
-        
+    
     public function scan($code){
 
         try {
@@ -44,8 +44,10 @@ class ItemController extends Controller
                 'message' => $message
             ]);
         }
+        
     }
-    
+
+
     // get all non archived items 
     public function items() {
         try {
@@ -54,8 +56,18 @@ class ItemController extends Controller
             // Incase you want to display all items including the archived ones,
             // then comment the  code directly below and uncomment the following one
     
-            $items = Item::where('user_id', $user->id)->where('archived', false)->select(['title', 'subtitle', 'created_at', 'id'])->get();
-           // $items = Item::where('user_id', $user->id)->select(['title', 'subtitle', 'created_at', 'id'])->get();
+            // $items = Item::where('user_id', $user->id)->with('category')->where('archived', false)->select(['title', 'subtitle', 'created_at', 'id'])->get();
+            // $items = Item::where('user_id', $user->id)->with('category')->where('archived', false)->get();
+            
+            $items = Item::where('user_id', $user->id)
+                    ->with(['category' => function ($query) {
+                        $query->select('id', 'name');
+                    }])
+                    ->where('archived', false)
+                    ->get(['title', 'subtitle', 'created_at', 'id', 'category_id']);
+            
+           
+            // $items = Item::where('user_id', $user->id)->select(['title', 'subtitle', 'created_at', 'id'])->get();
             return response()->json($items, 200);
         
         } catch(\Throwable $throwable) {
@@ -304,7 +316,7 @@ class ItemController extends Controller
             ]);
 
 
-            return response()->json([$item], 200);
+            return response()->json($item, 200);
 
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();
@@ -429,7 +441,7 @@ class ItemController extends Controller
             }
 
             $items = Item::where('user_id', Auth::user()->id)
-                ->select(['title', 'description', 'created_at', 'price'])
+                ->select(['id','title', 'description', 'created_at', 'price'])
                 ->orderBy('price', 'desc')
                 ->get();
     

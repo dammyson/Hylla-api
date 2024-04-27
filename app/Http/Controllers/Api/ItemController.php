@@ -4,14 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use Exception;
 use App\Models\Item;
-use App\Models\User;
 use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
-use App\Services\Utilities\GetHttpRequest;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use App\Services\Utilities\GetHttpRequest;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
@@ -19,7 +16,7 @@ use Laravel\Passport\Exceptions\AuthenticationException;
 
 class ItemController extends Controller
 {
-    
+
     public function scan($code){
 
         try {
@@ -46,29 +43,6 @@ class ItemController extends Controller
         }
         
     }
-
-
-}
-<?php
-
-namespace App\Http\Controllers\Api;
-
-use Exception;
-use App\Models\Item;
-use App\Models\User;
-use App\Models\Category;
-use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Validation\ValidationException;
-use Laravel\Passport\Exceptions\AuthenticationException;
-
-class ItemController extends Controller
-{
     // get all non archived items 
     public function items() {
         try {
@@ -398,8 +372,11 @@ class ItemController extends Controller
             }
 
             $archItem = Item::where('user_id', $user->id)
+                ->with(['category' => function ($query) {
+                    $query->select('id', 'name');
+                }])
                 ->where('archived', true)
-                ->select(['title', 'subtitle', 'created_at', 'id'])
+                ->select(['title', 'subtitle', 'created_at', 'id', 'category_id'])
                 ->get();
     
             return response()->json($archItem, 200);
@@ -462,7 +439,10 @@ class ItemController extends Controller
             }
 
             $items = Item::where('user_id', Auth::user()->id)
-                ->select(['id','title', 'description', 'created_at', 'price'])
+                ->with(['category' => function ($query) {
+                    $query->select('id', 'name');
+                }])
+                ->select(['id','title', 'description', 'created_at', 'price', 'category_id'])
                 ->orderBy('price', 'desc')
                 ->get();
     

@@ -6,8 +6,8 @@ use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\FilterController;
 use App\Http\Controllers\Api\ResetPasswordController;
 use App\Http\Controllers\Api\ForgotPasswordController;
-use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ItemController;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProfileController;
 
 /*

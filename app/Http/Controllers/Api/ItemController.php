@@ -20,57 +20,20 @@ use Laravel\Passport\Exceptions\AuthenticationException;
 class ItemController extends Controller
 {
     
-    public function scan($code){
-
-        try {
-
-           // $user = Auth::user();
-
-           //$url = 'https://api.upcdatabase.org/product/' . $code;
-           $token = 'ar19ee4aamlyfmrebu39auq0a0h8xa';
-           $url = 'https://api.barcodelookup.com/v3/products?barcode='. $code.'&key=' . $token;
-
-           $res = new GetHttpRequest($url);
-           $res =  $res->run();
-
-          // dd($res);
-
-            return response()->json([
-                "status"=> "succesful",
-                "item" => $res
-            ]);
-
-        } catch (\Throwable $throwable) {
-            $message = $throwable->getMessage();
-            return response()->json([
-                'status' => "failed",
-                'message' => $message
-            ]);
-        }
-        
-    }
-
+   
 
     // get all non archived items 
     public function items() {
         try {
             $user = Auth::user();
-
-            // Incase you want to display all items including the archived ones,
-            // then comment the  code directly below and uncomment the following one
-    
-            // $items = Item::where('user_id', $user->id)->with('category')->where('archived', false)->select(['title', 'subtitle', 'created_at', 'id'])->get();
-            // $items = Item::where('user_id', $user->id)->with('category')->where('archived', false)->get();
             
             $items = Item::where('user_id', $user->id)
-                    ->with(['category' => function ($query) {
-                        $query->select('id', 'name');
-                    }])
+                    ->with(['product', 'product.images'])
                     ->where('archived', false)
-                    ->get(['title', 'subtitle', 'created_at', 'id', 'category_id']);
+                    ->get();
             
            
-            // $items = Item::where('user_id', $user->id)->select(['title', 'subtitle', 'created_at', 'id'])->get();
+          
             return response()->json($items, 200);
         
         } catch(\Throwable $throwable) {
@@ -194,51 +157,21 @@ class ItemController extends Controller
 
     // add item
     public function addItem(Request $request){
+
+        $request->validate([
+            'product_id' => 'required|numeric|exists:products,id',
+        ]);
+
+
         try {
-
-            $request->validate([
-                'categoryName' => 'required',
-                'title' => 'sometimes|required|string',
-                'subtitle' => 'sometimes|required|string',
-                'description' => 'sometimes|required|string',
-                'price' => 'sometimes|required|numeric',
-                'product_name' => 'sometimes|required|string',
-                'serial_number' => 'sometimes|required|string',
-                'product_number' => 'sometimes|required|numeric',
-                'lot_number' => 'sometimes|required|numeric',
-                'barcode' => 'sometimes|required|numeric',
-                'weight' => 'sometimes|required|numeric',
-                'dimension' =>'sometimes|required|string',
-                'warranty_length' => 'sometimes|required|numeric'
-            ]);
-
             $user = Auth::user();
 
-            //remember to create an error handler if category name does not exist
-            $category = Category::where('name', $request->categoryName)->first();
-            
-            if (!$category) {
-                throw new ModelNotFoundException();
-            }
-
-            $item = Item::create([
-                'category_id' => $category->id,
-                'user_id' => $user->id,
-                'title' => $request->title ?? '',
-                'subtitle' => $request->subtitle ?? '',
-                'description' => $request->description ?? '',
-                'price' => $request->price ?? 0,
-                'product_name' => $request->productName,
-                'serial_number' => $request->serialNumber,
-                'product_number' => $request->productNumber,
-                'lot_number' => $request->lotNumber,
-                'barcode' => $request->barcode,
-                'weight' => $request->weight,
-                'dimension' => $request->dimensions,
-                'warranty_length' => $request->warrantyLength,
-                'archived' => false
+            $item =  Item::create([
+                'product_id' => $request->product_id,
+                'user_id' =>  $user->id
             ]);
-            
+
+            $item = Item::find($item);
 
             return response()->json([
                 "status"=> "succesful",

@@ -3,24 +3,19 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Query\Builder as QueryBuilder;
 
-class Item extends Model
+class Store extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'product_id', 'user_id', 'archived'
+        'product_id', 'name', 'country', 'currency', 'currency_symbol', 'price', 
+        'sale_price', 'link', 'availability', 'condition', 'last_update'
     ];
-    
-    protected $guarded = [];
 
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
-
 }

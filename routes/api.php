@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ForgotPasswordController;
 use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\ProductController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,7 +42,7 @@ Route::post('otp/generate', [OtpController::class, 'otpGenerate'])->name('otp.ge
 Route::get('otp/verification/{user_id}', [OtpController::class, 'otpVerification'])->name('otp.verification');
 Route::post('otp/login', [OtpController::class, 'loginWithOtp'])->name('otp.getlogin');
 
-Route::get('scan/{code}', [ItemController::class, 'scan'])->name('scan');
+
 //protected route
 Route::group([
     "middleware" => ["auth:api"]
@@ -81,4 +82,6 @@ Route::group([
     Route::post("profile/edit", [ProfileController::class, "profileEdit"])->name('profile.edit');
     Route::get("logout", [ApiController::class, "logout"])->name('logout');
     Route::delete('delete', [ApiController::class, "deleteAccount"])->name('deleteAccount');
+
+    Route::get('scan/{code}', [ProductController::class, 'scan'])->name('scan');
 });

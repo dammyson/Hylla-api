@@ -7,28 +7,16 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Run the migrations.  docker-compose run --rm artisan migrate:refresh --path=/database/migrations/2024_03_22_092657_create_items_table.php
      */
 
     public function up(): void
     {
         Schema::create('items', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('category_id');
             $table->unsignedBigInteger('user_id');
-            $table->text('title');
-            $table->text('subtitle');
-            $table->string('description');
-            $table->integer('price');
-            $table->boolean('favorite')->default(false);
-            $table->text('product_name')->nullable();
-            $table->integer('product_number')->nullable();
-            $table->integer('lot_number')->nullable();
-            $table->integer('barcode')->nullable();
-            $table->integer('weight')->nullable();
-            $table->string('dimension')->nullable();
-            $table->integer('warranty_length')->nullable();
-            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
+            $table->unsignedBigInteger('product_id');
+            $table->boolean('archived')->default(false);
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });

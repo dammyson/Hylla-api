@@ -286,7 +286,7 @@ class ItemController extends Controller
             $user = Auth::user();
 
             if ( $itemOwnerId !== $user->id ) {
-                throw new AuthorizationException();
+                throw new ModelNotFoundException();
 
                 // return response()->json([
                 //     'status' => 'failed',
@@ -320,6 +320,11 @@ class ItemController extends Controller
             if ($throwable instanceof AuthorizationException) {
                 $message = 'not authorized';
                 $statusCode = 401;
+            }
+
+            if ($throwable instanceof ModelNotFoundException) {
+                $message = 'Item not found';
+                $statusCode = 404;
             }
 
             if ($throwable instanceof ValidationException) {
@@ -403,8 +408,11 @@ class ItemController extends Controller
         try {
             $user = Auth::user();
             $favoriteItems = Item::where('user_id', $user->id)
+                ->with(['category' => function ($query) {
+                    $query->select('id', 'name');
+                }])
                 ->where('favorite', true)
-                ->select(['title', 'subtitle', 'created_at', 'id'])->get();
+                ->select(['title', 'subtitle', 'created_at', 'id', 'category_id'])->get();
                 
             return response()->json($favoriteItems, 200);
 

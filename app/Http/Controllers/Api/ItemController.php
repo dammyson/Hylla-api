@@ -26,11 +26,14 @@ class ItemController extends Controller
 
            // $user = Auth::user();
 
-           $url = 'https://api.upcdatabase.org/product/' . $code;
-        
+           //$url = 'https://api.upcdatabase.org/product/' . $code;
+           $token = 'ar19ee4aamlyfmrebu39auq0a0h8xa';
+           $url = 'https://api.barcodelookup.com/v3/products?barcode='. $code.'&key=' . $token;
 
            $res = new GetHttpRequest($url);
            $res =  $res->run();
+
+          // dd($res);
 
             return response()->json([
                 "status"=> "succesful",

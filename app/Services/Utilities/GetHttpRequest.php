@@ -17,11 +17,12 @@ class GetHttpRequest implements BaseServiceInterface
 
     public function run()
     {
-        $token = '3538AC6C8CD565E4F20FE37A6E02D3FF';
+       // $token = 'ar19ee4aamlyfmrebu39auq0a0h8xa';
+        // 'Authorization' => 'Bearer ' . $token,
         try {
                $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $token,
                 'Content-Type' => 'application/json', 
+                'Accept'=> 'application/json'
             ])
               ->get($this->url);
 

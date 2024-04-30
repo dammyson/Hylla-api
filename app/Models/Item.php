@@ -13,7 +13,7 @@ class Item extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_id', 'user_id', 'archived'
+        'product_id', 'user_id', 'archived', 'favorite'
     ];
     
     protected $guarded = [];

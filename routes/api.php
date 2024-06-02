@@ -53,7 +53,7 @@ Route::group([
     
 
     Route::get('inventories/items/{item}', [ItemController::class, 'item'])->name('item.show');
-    Route::put('inventories/items/{item}', [ItemController::class, 'updateItem'])->name('item.update');
+    Route::patch('inventories/items/{item}', [ItemController::class, 'updateItem'])->name('item.update');
     
     Route::get('inventories/favorite/items', [ItemController::class, 'favorite'])->name('items.favorite');
     Route::get('inventories/archived/items', [ItemController::class, 'archivedItem'])->name('items.archived');
@@ -64,6 +64,7 @@ Route::group([
     
 
     Route::get('categories', [CategoryController::class, 'categories'])->name('category.index');
+    Route::get('categories/{id}', [CategoryController::class, 'item'])->name('category.index');
     Route::post('category', [CategoryController::class, 'addCategory'])->name('category.add');
     Route::post("categories/filterByCategoryName", [FilterController::class, "filterController"])->name('categoryfilter.name');
     Route::post("categories/filterByOrder", [FilterController::class, "orderController"])->name('categoryfilter.order');

@@ -10,11 +10,11 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'code','barcode_number', 'barcode_formats', 'mpn', 'model', 'asin', 'title',
+        'code', 'user_id', 'archived','serial_number', 'favorite', 'barcode_number', 'barcode_formats', 'mpn', 'model', 'asin', 'title',
         'category', 'manufacturer', 'brand', 'age_group', 'ingredients',
         'nutrition_facts', 'energy_efficiency_class', 'color', 'gender',
         'material', 'pattern', 'format', 'multipack', 'size', 'length', 'width',
-        'height', 'weight', 'release_date', 'description', 'last_update'
+        'height', 'weight', 'release_date', 'description', 'last_update', 'warranty_length', 'dimension', 
     ];
 
     public function images()
@@ -30,5 +30,10 @@ class Product extends Model
     public function reviews()
     {
         return $this->hasMany(Review::class);
+    }
+
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class);
     }
 }

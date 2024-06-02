@@ -11,13 +11,35 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Category extends Model
 {
     use HasFactory;
+
+    protected $fillable = ['name'];
+
     
     protected $guarded = [];
 
-    public function items() :HasMany{
-        return $this->hasMany(Item::class);
-        
+    public function products()
+    {
+        return $this->belongsToMany(Product::class);
+    }
+    public static function ensureCategories(array $categoryNames)
+    {
+        $categoryIds = [];
+        foreach ($categoryNames as $categoryName) {
+            $categoryName = trim($categoryName);
+            if (!empty($categoryName)) {
+                // Check if the category already exists
+                $category = static::where('name', $categoryName)->first();
+
+                // If it does not exist, create it
+                if (!$category) {
+                    $category = static::create(['name' => $categoryName]);
+                }
+
+                // Add the ID to the list
+                $categoryIds[] = $category->id;
+            }
+        }
+        return $categoryIds;
     }
 
-    
 }

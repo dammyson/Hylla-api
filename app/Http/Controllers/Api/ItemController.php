@@ -9,6 +9,10 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Item\UpdateRequest;
+use App\Models\ItemCache;
+use App\Models\Product;
+use App\Services\Product\CreateService;
 use App\Services\Utilities\GetHttpRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -27,8 +31,8 @@ class ItemController extends Controller
         try {
             $user = Auth::user();
             
-            $items = Item::where('user_id', $user->id)
-                    ->with(['product', 'product.images'])
+            $items = Product::where('user_id', $user->id)
+                    ->with(['stores', 'images'])
                     ->where('archived', false)
                     ->get();
             
@@ -57,7 +61,7 @@ class ItemController extends Controller
     // get one item
     public function item($item) {
         try {
-            $item = Item::find($item);
+            $item = Product::with(['stores', 'images'])->find($item);
 
             if (!$item) {
                 throw new ModelNotFoundException('Item does not exist');
@@ -119,10 +123,16 @@ class ItemController extends Controller
         
             // Incase you want to display all items including the archived ones,
             // then comment the  code directly below and uncomment the following one
-            $items = Item::where('user_id', $user->id)->with(['product', 'product.stores'])->where('archived', false)->get();
+            $items = Product::where('user_id', $user->id)->with(['stores'])->where('archived', false)->get();
+            dd($items);
             $totalprice = 0;
             foreach($items  as $item){
-                $totalprice =  $totalprice  + $item->product->stores[0]->price;
+              if($item->stores[0]->price == "" ){
+                $totalprice =  $totalprice  + 0;
+              }else{
+                $totalprice =  $totalprice  + $item->stores[0]->price;
+              }
+               
             }
         
             $itemsCount = $items->count(); // or count($items)
@@ -160,24 +170,33 @@ class ItemController extends Controller
     public function addItem(Request $request){
 
         $request->validate([
-            'product_id' => 'required|numeric|exists:products,id',
+            'code' => 'required',
         ]);
 
-
         try {
+
             $user = Auth::user();
+            $cachedDetails = ItemCache::where('code', $request->code)->first();
 
-            $item =  Item::create([
-                'product_id' => $request->product_id,
-                'user_id' =>  $user->id
-            ]);
+            if($cachedDetails) {
 
-            $item = Item::find($item);
+               
+                $product = (new CreateService(json_decode($cachedDetails->details), $request->code,  $user))->run();
 
-            return response()->json([
-                "status"=> "succesful",
-                "item" => $item
-            ], 200);
+                $item = Product::find($product->id);
+
+                return response()->json([
+                    "status"=> "succesful",
+                    "item" => $item
+                ], 200);
+
+            }else{
+                return response()->json([
+                   "status"=> "Can not found product with that code",
+                  ], 500);
+            }
+
+           
 
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();
@@ -205,19 +224,12 @@ class ItemController extends Controller
     }
 
 
-    public function updateItem(Request $request, Item $item) {
+    public function updateItem(UpdateRequest $request, Product $item) {
 
-        $request->validate([
-            'favorite' => 'sometimes|required|boolean',
-            'archived' => 'sometimes|required|boolean',
-        ]);
-
+        $validated = $request->validated();
         try {
         
-            $item = $item->update([
-                'favorite' => $request->favorite ?? $item->favorite,
-                'archived' => $request->archived ?? $item->archived,
-            ]);
+            $item->fill($validated)->save();
 
             return response()->json([
                 'data'=>  $item,
@@ -245,9 +257,9 @@ class ItemController extends Controller
                 throw new AuthenticationException();
             }
 
-            $archItem = Item::where('user_id', $user->id)
+            $archItem = Product::where('user_id', $user->id)
                 ->where('archived', true)
-                ->with(['product', 'product.stores', 'product.images'])
+                ->with(['stores', 'images'])
                 ->get();
     
             return response()->json($archItem, 200);
@@ -273,8 +285,8 @@ class ItemController extends Controller
     public function favorite() {
         try {
             $user = Auth::user();
-            $favoriteItems = Item::where('user_id', $user->id)
-              ->with(['product', 'product.stores', 'product.images'])
+            $favoriteItems = Product::where('user_id', $user->id)
+              ->with(['stores', 'images'])
                 ->where('favorite', true)->get();
                 
             return response()->json($favoriteItems, 200);
@@ -293,8 +305,9 @@ class ItemController extends Controller
 
     public function estimatedItem(){
         try {
-            $items = Item::where('user_id', Auth::user()->id)
-                ->with(['product', 'product.stores', 'product.images'])
+            $items = Product::where('user_id', Auth::user()->id)
+                ->where('archived', false)
+                ->with(['stores', 'images'])
                 ->get();
     
             return response()->json($items, 200);

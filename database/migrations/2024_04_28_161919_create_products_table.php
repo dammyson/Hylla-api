@@ -13,8 +13,11 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->string('code')->unique();
-            $table->string('barcode_number')->unique();
+            $table->unsignedBigInteger('user_id');
+            $table->boolean('archived')->default(false);
+            $table->boolean('favorite')->default(false);
+            $table->string('code');
+            $table->string('barcode_number');
             $table->text('barcode_formats')->nullable();
             $table->string('mpn')->nullable();
             $table->string('model')->nullable();
@@ -22,6 +25,10 @@ return new class extends Migration
             $table->string('title');
             $table->string('category');
             $table->string('manufacturer');
+            $table->string('serial_number')->nullable();
+            $table->string('weight')->nullable();
+            $table->string('dimension')->nullable();
+            $table->string('warranty_length')->nullable();
             $table->string('brand');
             $table->text('ingredients')->nullable();
             $table->text('nutrition_facts')->nullable();
@@ -37,6 +44,21 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('reviews', function (Blueprint $table) {
+            $table->dropForeign('reviews_product_id_foreign');
+        });
+
+        Schema::table('images', function (Blueprint $table) {
+            $table->dropForeign('images_product_id_foreign');
+        });
+
+        Schema::table('stores', function (Blueprint $table) {
+            $table->dropForeign('stores_product_id_foreign');
+        });
+
+        Schema::table('category_product', function (Blueprint $table) {
+            $table->dropForeign('category_product_product_id_foreign');
+        });
         Schema::dropIfExists('products');
     }
 };

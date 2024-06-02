@@ -2,6 +2,7 @@
 
 namespace App\Services\Product;
 
+use App\Models\Category;
 use App\Models\Image;
 use App\Services\BaseServiceInterface;
 use App\Models\Product;
@@ -9,21 +10,24 @@ use App\Models\Store;
 
 class CreateService implements BaseServiceInterface
 {
-    protected $data, $code;
+    protected $data, $code, $user;
 
-    public function __construct($data, $code)
+    public function __construct($data, $code, $user)
     {
        
         $this->data = $data;
         $this->code = $code;
+        $this->user = $user;
     }
 
     public function run()
     {
-        return \DB::transaction(function () {
+       return \DB::transaction(function () {
             $productData = $this->data;
+
             $product = Product::create([
                 'code' => $this->code,
+                'user_id' => $this->user->id,
                 'barcode_number' => $productData->barcode_number,
                 'barcode_formats' => $productData->barcode_formats,
                 'mpn' => $productData->mpn,
@@ -65,15 +69,25 @@ class CreateService implements BaseServiceInterface
                 'last_update' => $storeData->last_update
             ]);
         }
-            return $product;
-        });
+
+        $categoryIds = $this->createCategories($productData->category);
+       $product->categories()->sync($categoryIds);
+           return $product;
+       });
     }
 
 
-    public function createSpecification($product_id)
+    public function createCategories($cat)
     {
-            
+        $cats =   $this->stringToArray($cat); 
+       
+        $categoryIds = Category::ensureCategories($cats);
+        
+        return  $categoryIds;
+    }
 
-            return true;
+    public function stringToArray($inputString)
+    {
+        return preg_split('/\s*,\s*|\s*&\s*|\s+and\s+/i', trim($inputString));
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Item;
+use App\Models\ItemCache;
 use App\Models\Product;
 use App\Services\Product\CreateService;
 use App\Services\Utilities\GetHttpRequest;
@@ -22,26 +23,53 @@ class ProductController extends Controller
 
         try {
 
-            $product = Product::where('code', $code)->first();
+            $cachedDetails = ItemCache::where('code', $code)->first();
 
 
-            if (!$product) {
+            if($cachedDetails) {
+
+                $object = [
+                    'id' => $cachedDetails->id,
+                    'code' => $cachedDetails->code,
+                    'details' => json_decode($cachedDetails->details)
+                ];
+
+                return response()->json([
+                    "status"=> "succesful",
+                    "item" => $object
+                ]);
+
+
+            }else{
+
                 Log::info("Cannot find in the Db cheeck api");
                 $url = 'https://api.barcodelookup.com/v3/products?barcode='. $code.'&key=ar19ee4aamlyfmrebu39auq0a0h8xa';
 
                 $res = new GetHttpRequest($url);
                 $res =  $res->run();
-     
-               $product = (new CreateService($res->products[0], $code))->run();
-               
-            }
 
-            $product = Product::where('code', $code) ->with(['images'])->first();
+                $productDetailsJson = json_encode($res->products[0]);
+
+                $cachedDetails = ItemCache::create([
+                    'code' => $code,
+                    'details' => $productDetailsJson
+                ]);
+                
+
+                $object = [
+                    'id' => $cachedDetails->id,
+                    'code' => $cachedDetails->code,
+                    'details' => json_decode($cachedDetails->details)
+                ];
+
+                return response()->json([
+                    "status"=> "succesful",
+                    "item" => $object
+                ]);
+        
+            }
           
-            return response()->json([
-                "status"=> "succesful",
-                "item" => $product
-            ]);
+           
           
 
 
@@ -54,4 +82,5 @@ class ProductController extends Controller
         }
         
     }
+
 }

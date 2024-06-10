@@ -79,4 +79,23 @@ class ResetPasswordController extends Controller
         //return redirect()->to(route('login'))->with('success', 'Password reset successfully');
     
     }
+
+    public function resetPassword(Request $request){
+     
+        $this->validate($request, [
+            'password' => 'required|between:4,32|confirmed',
+            'email' => 'required|exists:users,email'
+        ]);
+
+        try {
+            $authUser = User::where('email', $request->email)->firstOrFail();
+            $authUser->password = $request->password;
+            $authUser->save();
+          
+            return response()->json(['status' => true, 'message' => 'Password Successfully Reset', 'data' => $authUser ], 200);
+        } catch (\Exception $exception) {
+            return response()->json(['status' => false,  'message' => $exception->getMessage()], 500);
+        }
+
+    }
 }

@@ -33,6 +33,11 @@ Route::post('password/forgot', [ForgotPasswordController::class, 'forgotPassword
 Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetPasswordForm'])->name('reset.passport.get');
 Route::post('password/reset', [ResetPasswordController::class, 'resetPasswordPost'])->name('reset.password.post');
 
+
+Route::post('forgetpassword',  [OtpController::class,'generatePinForgetPassword']);
+Route::post('verifycode',  [OtpController::class,'VerifyOTP']);
+Route::post('resetPassword', [ResetPasswordController::class, 'resetPassword']);
+
 /**
  * Important this Otp section has not been tested (no twillio credentials)
  */

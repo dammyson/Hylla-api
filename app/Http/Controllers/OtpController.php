@@ -2,160 +2,107 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Otp;
 use App\Models\User;
-use App\Models\UserOtp;
+use App\Services\User\CreateOtpService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 
 class OtpController extends Controller
 {
-    /**
-     * return the view page where the user enters email and password
-     */
     
-    // for registration the only difference is that  we dont redirect start to the
-    // otp login rather, we call the generateOtp route and pass the email and password as parameters
-
-    public function otpLogin() {
-
-        // this view should render the login page for user to input email and password
-        return view('auth.otpLogin');
-    }
-
-    // generate Otp
-    public function otpGenerate(Request $request) {
-        $request->validate([
-            "email" => 'required',
-            'password'=> 'required'
-         
-        ]);
-
-        $user = User::where('email', $request->email)->where('password', $request->password)->first();
-        
-        if (!$user) {
-            return response()->json([
-                'status' => 'failed',
-                'message'=> 'no such user'
-            ]);
-        }
-
-
-        $mobileNum = $user->phone_number;
-
-        $userOtp = $this->generateOtp($request->mobileNum);
-        $userOtp->sendSMS($mobileNum);    
-        
-        return response()->json([
-            'status'=> 'success',
-            'message' => 'OTP sent',
-            'user_id' => $userOtp->id
-        ]);
-
-        // return redirect()->route('otp.verification', ['user_id' => $userOtp->user_id])
-        //     ->with('success','OTP has been sent to Your Mobile number.');
-    }
-
-    private function generateOtp($mobile_no)
+    public function generatePinForgetPassword(Request $request)
     {
-        $user = User::where('mobile_no', $mobile_no)->first();
-        // arrange the otp by the last entered one in the db in ascending order
-        $userOtp = UserOtp::where('user_id', $user->id)->latest()->first();
-        
-        // get current timestamp
-        $now = now();
-
-        if ($userOtp && $now->isBefore($userOtp->expire_at)) {
-            return $userOtp;
-
-        }
-
-        /* Create a New OTP */
-        return UserOtp::create([
-            'user_id' => $user->id,
-            'otp' => rand(123456, 999999),
-            'expire_at' => $now->addMinutes(10)
+        $validated = $request->validate([
+            'email' => 'required',
         ]);
+        
+      
+        try {
+            $user = User::where('email', "ayeni.ayobami21@gmail.com")->first();
+            $new_otp = new CreateOtpService($validated);
+            $new_otp = $new_otp->run();
 
-    
+            $user_mail_content_array = array(
+                "sender" => "PR",
+                "code" => $new_otp->otp,
+                "link" => "",
+
+              );
+
+           // $user->notify(new ResetPasswordNotification($user_mail_content_array));
+           
+            return response()->json(['status' => true, 'data' => $new_otp,  'message' => 'Mail sent successfully'], 201);
+        } catch (\Exception $exception) {
+            Log::error($exception->getMessage());
+            return response()->json(['status' => false,  'message' => $exception->getMessage()], 500);
+        }
     }
 
-    /**
-     * display page show otp input
-     * and pass the user Id along
-     */
-    public function Otpverification($user_id) {
-        return view('auth.otpVerification')->with([
-            'user_id' => $user_id
+    public function VerifyOTP(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required',
+            'code' => 'required',
         ]);
-    }
-
-
-    /**
-     * here we validate that the user's entered otp
-     * is the same with that in the db and if true, login the user in.
-     */
-
-    public function loginWithOtp(Request $request) {
-        // validation
-        $request->validate([
-            'user_id' => 'required|exists:users, id',
-            'otp'=> 'required',
-        ]);
-
-
-        /* Validation Logic */
-        // $userOtp = UserOtp::where('user_id', $request->user_id)->where('otp', $request->otp)->latest()->first()
-        $userOtp = UserOtp::where('user_id', $request->user_id)->where('otp', $request->otp)->first();
         
-        $now = now();
-
-        if (!$userOtp) {
-            return redirect()->back()->with('error', 'your otp is incorrect');
-        
-        } else if ($userOtp && $now->isAfter($userOtp->expire_at)) {
-            return redirect()->route('otp.login')->with('error', 'your otp has expired');
-        }
-
-        /*
-            the method  commented out so we the test the method in 'SECTION 2' below
-            however if section 2 fails (because Auth::login($user) does not give us a session access token rather
-            if gives us an Id and other many route depend on this token to be accessed) then comment section 2 out
-            / and use the commented method below
-
-
-            if (Auth::attempt([
-                "email" => $request->email,
-                "password" => $request->password
-            ])) {
-                
-                $user = Auth::user();
-                $token = $user->createToken("myToken")->accessToken;
-
-                return response()->json([
-                    "status" => true,
-                    "message" => "Login successful",
-                    "access_token" => $token
-                ]);
+        try {
+            $model = Otp::where('email', '=', $validated['email']) 
+            ->where('otp', '=', $validated['code'])
+            ->where('is_verified', '=', 0)
+            ->firstOrFail();
+            if($model->created_at->addMinutes(30)->isPast()) {
+                return response()->json(['status' => false,  'message' => "This OTP has expired"], 500);
             }
+            $model->is_verified = 1;
+            $model->save();
 
-        */
-        
-        $user = User::whereId($request->user_id)->first();
-
-        if ($user) {
-            $userOtp->update([
-                'expire_at' => now()
-            ]);
-
-            Auth::login($user);
-            
-            $sessionId = session()->getid();
-            return response()->json([
-                        "status" => true,
-                        "message" => "Login successful",
-                        "sessionId" => $sessionId
-            ]);
+            return response()->json(['status' => true, 'data' => $model, 'message' => 'Verified successfully'], 200);
+        } catch (\Exception $exception) {
+            Log::error($exception->getMessage());
+            return response()->json(['status' => false,  'message' => "This OTP has expired or does not exist"], 500);
         }
     }
+
+    public function SendMail(){
+        // Use your saved credentials, specify that you are using Send API v3.1
+
+       // $mj = new \Mailjet\Client("011c044df1b2023fbb1c98f81590ebc6", "3b0c93b357a548a0cc8c181012c60ff7",true,['version' => 'v3.1']);
+
+        // Define your request body
+
+
+
+        // $body = [
+        //     'Messages' => [
+        //         [
+        //             'From' => [
+        //                 'Email' => "simonsmith850@hotmail.com",
+        //                 'Name' => "Me"
+        //             ],
+        //             'To' => [
+        //                 [
+        //                     'Email' => "ayeni.ayobami21@gmail.com",
+        //                     'Name' => "You"
+        //                 ]
+        //             ],
+        //             'TemplateID' => 5678093,
+        //             'TemplateLanguage' => true,
+        //             'Subject' => "Your email flight plan!"
+        //         ]
+        //     ]
+        // ];
+
+        // // All resources are located in the Resources class
+
+        // $response = $mj->post(Resources::$Email, ['body' => $body]);
+
+        // // Read the response
+        //  if($response->success()){
+        //     return response()->json(['status' => true,  'message' => 'Mail sent successfully'], 201);
+        //  }
+        
+
+     }
 }

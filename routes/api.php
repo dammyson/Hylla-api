@@ -33,7 +33,7 @@ Route::post('password/forgot', [ForgotPasswordController::class, 'forgotPassword
 Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetPasswordForm'])->name('reset.passport.get');
 Route::post('password/reset', [ResetPasswordController::class, 'resetPasswordPost'])->name('reset.password.post');
 
-
+//
 Route::post('forgetpassword',  [OtpController::class,'generatePinForgetPassword']);
 Route::post('verifycode',  [OtpController::class,'VerifyOTP']);
 Route::post('resetPassword', [ResetPasswordController::class, 'resetPassword']);
@@ -48,6 +48,11 @@ Route::get('otp/verification/{user_id}', [OtpController::class, 'otpVerification
 Route::post('otp/login', [OtpController::class, 'loginWithOtp'])->name('otp.getlogin');
 
 
+Route::middleware(['auth:api'])->group(function () {
+    Route::post('/change/password',  [ProfileController::class,'changePassword']); 
+});
+
+
 //protected route
 Route::group([
     "middleware" => ["auth:api"]
@@ -56,7 +61,6 @@ Route::group([
     Route::get('inventories/items', [ItemController::class, 'items'])->name('items.index');
     Route::post('inventories/items', [ItemController::class, 'addItem'])->name('item.add');
     
-
     Route::get('inventories/items/{item}', [ItemController::class, 'item'])->name('item.show');
     Route::patch('inventories/items/{item}', [ItemController::class, 'updateItem'])->name('item.update');
     
@@ -67,7 +71,6 @@ Route::group([
     // try converting the method below to a get method
     Route::post("inventories/items/search", [FilterController::class, "search"])->name('items.search');
     
-
     Route::get('categories', [CategoryController::class, 'categories'])->name('category.index');
     Route::get('categories/{id}', [CategoryController::class, 'item'])->name('category.index');
     Route::post('category', [CategoryController::class, 'addCategory'])->name('category.add');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Otp;
 use App\Models\User;
+use App\Notifications\ResetPasswordNotification;
 use App\Services\User\CreateOtpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -17,10 +18,9 @@ class OtpController extends Controller
         $validated = $request->validate([
             'email' => 'required',
         ]);
-        
       
         try {
-            $user = User::where('email', "ayeni.ayobami21@gmail.com")->first();
+            $user = User::where('email', $validated['email'])->first();
             $new_otp = new CreateOtpService($validated);
             $new_otp = $new_otp->run();
 
@@ -31,7 +31,8 @@ class OtpController extends Controller
 
               );
 
-           // $user->notify(new ResetPasswordNotification($user_mail_content_array));
+             
+            $user->notify(new ResetPasswordNotification($user_mail_content_array));
            
             return response()->json(['status' => true, 'data' => $new_otp,  'message' => 'Mail sent successfully'], 201);
         } catch (\Exception $exception) {

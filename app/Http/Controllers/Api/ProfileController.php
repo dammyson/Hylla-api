@@ -129,7 +129,7 @@ class ProfileController extends Controller
     public function changePassword(Request $request)
     {
         $validated = $request->validate([
-            'old_password' => 'required',
+            // 'old_password' => 'required',
             'password' => 'required|between:4,32|confirmed',
         ]);
 
@@ -138,13 +138,13 @@ class ProfileController extends Controller
             $info = User::where('id', $user->id)->first();
             if ($info) {
 
-                if (Hash::check(trim($validated['old_password']), $info->password)) {
+                // if (Hash::check(trim($validated['old_password']), $info->password)) {
                     $info->password = $validated['password'];
                     $info->save();
                     return response()->json(['status' => true, 'data' => $info,  'message' => 'Password Changed'], 201);
-                } else {
-                    return response(['message' => 'Email or Password Incorrect'], 401);
-                }
+                // } else {
+                //     return response(['message' => 'Email or Password Incorrect'], 401);
+                // }
             } else {
                 return response(['message' => 'Email or Password Incorrect'], 401);
             }

@@ -48,11 +48,6 @@ Route::get('otp/verification/{user_id}', [OtpController::class, 'otpVerification
 Route::post('otp/login', [OtpController::class, 'loginWithOtp'])->name('otp.getlogin');
 
 
-Route::middleware(['auth:api'])->group(function () {
-    Route::post('/change/password',  [ProfileController::class,'changePassword']); 
-});
-
-
 //protected route
 Route::group([
     "middleware" => ["auth:api"]
@@ -91,6 +86,7 @@ Route::group([
     Route::post("profile/edit", [ProfileController::class, "profileEdit"])->name('profile.edit');
     Route::get("logout", [ApiController::class, "logout"])->name('logout');
     Route::delete('delete', [ApiController::class, "deleteAccount"])->name('deleteAccount');
-
+    Route::post('/profile/changePassword',  [ProfileController::class,'changePassword']); 
+    
     Route::get('scan/{code}', [ProductController::class, 'scan'])->name('scan');
 });

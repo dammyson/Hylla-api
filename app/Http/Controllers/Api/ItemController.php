@@ -120,11 +120,9 @@ class ItemController extends Controller
             if(!$user) {
                 throw new AuthenticationException();
             }
-        
-            // Incase you want to display all items including the archived ones,
-            // then comment the  code directly below and uncomment the following one
+
             $items = Product::where('user_id', $user->id)->with(['stores'])->where('archived', false)->get();
-            dd($items);
+           
             $totalprice = 0;
             foreach($items  as $item){
               if($item->stores[0]->price == "" ){

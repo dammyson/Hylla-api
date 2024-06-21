@@ -27,7 +27,7 @@ class ResetPasswordNotification extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject("PlayRivals Password Reset")
+            ->subject("Hylla Password Reset")
             ->markdown('mail.password_email', ['mail_content' => $this->details]);
     }
 }

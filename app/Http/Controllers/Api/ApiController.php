@@ -82,19 +82,7 @@ class ApiController extends Controller
                 "password" => "required"
             ]);
     
-            // create error handle if your login fails
     
-            /**
-             * IMPORTANT|! if the twillio credential (for user otp) are ready, uncomment this and 
-             * comment out the rest  others below. 
-             * 
-             * if the commented method fails, then convert the variable being pass using the 'with' 
-             * method to route parameters
-            */ 
-            // return redirect()->route('otp.generate')->with([
-            //     'email' => $request->email, 
-            //     'password' => $request->password
-            // ]);
     
             
             // if the twillio credential are ready then comment/delete these codes below

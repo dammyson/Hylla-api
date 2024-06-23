@@ -24,10 +24,6 @@ class ProductController extends Controller
         try {
 
             $cachedDetails = ItemCache::where('code', $code)->first();
-
-           
-
-
             if($cachedDetails) {
 
                 $object = [
@@ -48,7 +44,7 @@ class ProductController extends Controller
 
                 Log::info("Cannot find in the Db cheeck api");
                 $url = 'https://api.barcodelookup.com/v3/products?barcode='. $code.'&key=ar19ee4aamlyfmrebu39auq0a0h8xa';
-                dd($url );
+                
                 $res = new GetHttpRequest($url);
                 $res =  $res->run();
 

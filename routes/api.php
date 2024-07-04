@@ -27,6 +27,8 @@ Route::post("register", [ApiController::class, "register"])->name('register');
 Route::post("login", [ApiController::class, "login"])->name('login');
 
 
+
+
 //forgot password implementation (open route)
 Route::get('password/forgot', [ForgotPasswordController::class, 'showForgotPasswordForm'])->name('forget.password.get');
 Route::post('password/forgot', [ForgotPasswordController::class, 'forgotPasswordPost'])->name('forgot.password.post');
@@ -52,6 +54,7 @@ Route::post('otp/login', [OtpController::class, 'loginWithOtp'])->name('otp.getl
 Route::group([
     "middleware" => ["auth:api"]
 ], function() {
+    Route::post("support", [OtpController::class, "SendMail"])->name('support');
     Route::get('inventories', [ItemController::class, 'inventories'])->name('all.inventories');
     Route::get('inventories/items', [ItemController::class, 'items'])->name('items.index');
     Route::post('inventories/items', [ItemController::class, 'addItem'])->name('item.add');

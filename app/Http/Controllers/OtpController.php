@@ -7,7 +7,10 @@ use App\Models\User;
 use App\Notifications\ResetPasswordNotification;
 use App\Services\User\CreateOtpService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+
+use \Mailjet\Resources;
 
 
 class OtpController extends Controller
@@ -66,43 +69,56 @@ class OtpController extends Controller
         }
     }
 
-    public function SendMail(){
-        // Use your saved credentials, specify that you are using Send API v3.1
+    public function SendMail(Request $request){
+  
+        $validated = $request->validate([
+            'body' => 'required',
+            'subject' => 'required',
+        ]);
 
-       // $mj = new \Mailjet\Client("011c044df1b2023fbb1c98f81590ebc6", "3b0c93b357a548a0cc8c181012c60ff7",true,['version' => 'v3.1']);
+        $user = Auth::user();
+       $mj = new \Mailjet\Client("fe741e62dc1ee2ae5edb9bbb02729f6b", "3697916ea1f2432e788ca2278f284334",true,['version' => 'v3.1']);
 
-        // Define your request body
+        $body = [
+            'Messages' => [
+                [
+                    'From' => [
+                        'Email' => "ahall@bearwood.llc",
+                        'Name' => "Hylla Support"
+                    ],
+                    'To' => [
+                        [
+                            'Email' => "support@hylla.app",
+                            'Name' => "Hylla Support"
+                        ]
+                    ],
+                    'Subject'=> $validated["subject"],
+                    'TextPart'=> $validated["body"],
+                    'HTMLPart'=> "
+                    <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+                        <h2 style='color: #4CAF50;'>Hello Support Team,</h2>
+                        <p><b>Issues Reported by the User:</b></p>
+                        <p style='margin: 10px 0; padding: 10px; background-color: #f9f9f9; border-left: 4px solid #4CAF50;'>
+                            " . nl2br(htmlspecialchars($validated["body"])) . "
+                        </p>
+                        <p>If you have any questions or need further questins, please feel free to contact the user at <a href='mailto:$user->email'>
+                        " . nl2br(htmlspecialchars($user->name)) . "
+                        </a>.</p>
+                        <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;'>
+                       
+                        <p style='font-size: 0.9em; color: #777;'>This email is generated automatically, please do not reply directly to this email.</p>
+                    </div>
+                "
+                ]
+            ]
+        ];
 
+        $response = $mj->post(Resources::$Email, ['body' => $body]);
 
-
-        // $body = [
-        //     'Messages' => [
-        //         [
-        //             'From' => [
-        //                 'Email' => "simonsmith850@hotmail.com",
-        //                 'Name' => "Me"
-        //             ],
-        //             'To' => [
-        //                 [
-        //                     'Email' => "ayeni.ayobami21@gmail.com",
-        //                     'Name' => "You"
-        //                 ]
-        //             ],
-        //             'TemplateID' => 5678093,
-        //             'TemplateLanguage' => true,
-        //             'Subject' => "Your email flight plan!"
-        //         ]
-        //     ]
-        // ];
-
-        // // All resources are located in the Resources class
-
-        // $response = $mj->post(Resources::$Email, ['body' => $body]);
-
-        // // Read the response
-        //  if($response->success()){
-        //     return response()->json(['status' => true,  'message' => 'Mail sent successfully'], 201);
-        //  }
+        // Read the response
+         if($response->success()){
+            return response()->json(['status' => true,  'message' => 'Mail sent successfully'], 201);
+         }
         
 
      }

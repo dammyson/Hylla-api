@@ -28,7 +28,7 @@ class ApiController extends Controller
                 "password" => "required|confirmed",
             ]);
 
-            User::create([
+            $user =  User::create([
                 "name" => $request->first_name . ' ' . $request->last_name,
                 "first_name" => $request->first_name,
                 "last_name" => $request->last_name,
@@ -38,27 +38,14 @@ class ApiController extends Controller
                 "email" => $request->email,
                 "password" => Hash::make($request->password),
             ]);
-
-            /*
-                IMPORTANT! the commented code the below has not been tested yet (because twillio credential are  not available) however,
-                it redirects to the generateOtp route and passing the email and password as parameters
-                
-                if this method fails (we try to pass the data as form data) then comment it and use the next one where variable as passed as route parameters
-
-                return redirect()->route('otp.generate')->with([
-                    'email' => $request->email, 
-                    'password' => $request->password,
-                ]);
-                
-                here while redirecting to the generate route pass in the variables as route parameters 
-                // return redirect()->route('otp.generate', ['email' => $request->email, 'password' => $request->password, 'phone_no'=> $request->phone_no])->with('success','user registered successfully');
-                
-            */
-        
+           
+            $token = $user->createToken("myToken")->accessToken;
             
             return response()->json([
                 "status" => true,
-                "message" => "User created successfully"
+                "message" => "User created successfully",
+                "access_token" => $token,
+                "user" => $user
             ], 201);
         
         } catch(\Throwable $throwable) {

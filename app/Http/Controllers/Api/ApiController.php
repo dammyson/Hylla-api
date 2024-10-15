@@ -21,9 +21,6 @@ class ApiController extends Controller
             $request->validate([
                 "first_name" => 'required',
                 "last_name" => 'required',
-                "date_of_birth" => 'required',
-                "phone_number" => "required|unique:users",
-                "zip_code" => "required",
                 "email" => "required|email|unique:users",
                 "password" => "required|confirmed",
             ]);
@@ -32,9 +29,9 @@ class ApiController extends Controller
                 "name" => $request->first_name . ' ' . $request->last_name,
                 "first_name" => $request->first_name,
                 "last_name" => $request->last_name,
-                "date_of_birth" => $request->date_of_birth,
-                "phone_number" => $request->phone_number,
-                "zip_code" => $request->zip_code,
+                "date_of_birth" => "2024-10-15 00:36:48",
+                "phone_number" => "000000000",
+                "zip_code" => "62704",
                 "email" => $request->email,
                 "password" => Hash::make($request->password),
             ]);

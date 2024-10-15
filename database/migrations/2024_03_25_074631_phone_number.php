@@ -7,13 +7,13 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Run the migrations.  docker-compose run --rm artisan migrate:refresh --path=/database/migrations/2024_03_25_074631_phone_number.php
      */
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
             //
-            $table->string('phone_number')->unique();
+            $table->string('phone_number')->nullable();
         });
     }
 

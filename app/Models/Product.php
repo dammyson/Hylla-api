@@ -17,6 +17,11 @@ class Product extends Model
         'height', 'weight', 'release_date', 'description', 'last_update', 'warranty_length', 'dimension', 
     ];
 
+    public function user()
+{
+    return $this->belongsTo(User::class);
+}
+
     public function images()
     {
         return $this->hasMany(Image::class);

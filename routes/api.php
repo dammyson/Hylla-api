@@ -92,4 +92,5 @@ Route::group([
     Route::post('/profile/changePassword',  [ProfileController::class,'changePassword']); 
     
     Route::get('scan/{code}', [ProductController::class, 'scan'])->name('scan');
+    Route::get('loadimages', [ProductController::class, 'loadImages'])->name('loadimages');
 });

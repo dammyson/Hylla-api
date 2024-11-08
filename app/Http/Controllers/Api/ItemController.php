@@ -32,30 +32,26 @@ class ItemController extends Controller
             $user = Auth::user();
             
             $items = Product::where('user_id', $user->id)
-                    ->with(['stores', 'images'])
+                    ->with(['stores', 'images', 'productImages'])
                     ->where('archived', false)
                     ->get();
             
-           
-          
             return response()->json($items, 200);
         
         } catch(\Throwable $throwable) {
             $message = $throwable->getMessage();
             $statusCode = 500;
+    
             if ($throwable instanceof AuthenticationException) {
-                $message = "user is unauthenticated";
+                $message = "User is unauthenticated";
                 $statusCode = 401;
             }
-
-            response()->json([
+    
+            return response()->json([
                 'status' => 'failed',
                 'message' => $message
             ], $statusCode);
-
-
         }
-       
     }
 
     // get one item

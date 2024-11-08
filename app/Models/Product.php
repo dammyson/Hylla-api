@@ -36,4 +36,9 @@ class Product extends Model
     {
         return $this->belongsToMany(Category::class);
     }
+
+    public function productImages()
+{
+    return $this->hasMany(ProductImages::class, 'barcode', 'code');
+}
 }

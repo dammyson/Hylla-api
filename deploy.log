@@ -4,3 +4,19 @@ From github.com:dammyson/Hylla-api
    ea75c31..b6e113b  dev        -> origin/dev
 HEAD is now at b6e113b updat to home page
 Deployment completed successfully at Sun Nov 10 08:47:44 PM UTC 2024
+fatal: detected dubious ownership in repository at '/home/user/htdocs/srv633900.hstgr.cloud'
+To add an exception for this directory, call:
+
+	git config --global --add safe.directory /home/user/htdocs/srv633900.hstgr.cloud
+fatal: detected dubious ownership in repository at '/home/user/htdocs/srv633900.hstgr.cloud'
+To add an exception for this directory, call:
+
+	git config --global --add safe.directory /home/user/htdocs/srv633900.hstgr.cloud
+fatal: detected dubious ownership in repository at '/home/user/htdocs/srv633900.hstgr.cloud'
+To add an exception for this directory, call:
+
+	git config --global --add safe.directory /home/user/htdocs/srv633900.hstgr.cloud
+fatal: detected dubious ownership in repository at '/home/user/htdocs/srv633900.hstgr.cloud'
+To add an exception for this directory, call:
+
+	git config --global --add safe.directory /home/user/htdocs/srv633900.hstgr.cloud

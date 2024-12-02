@@ -33,6 +33,7 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'firebase_token',
         'phone_number',
         'first_name',
         'last_name',

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ResetPasswordController;
 use App\Http\Controllers\Api\ForgotPasswordController;
 use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\ProductController;
 
@@ -93,4 +94,9 @@ Route::group([
     
     Route::get('scan/{code}', [ProductController::class, 'scan'])->name('scan');
     Route::get('loadimages', [ProductController::class, 'loadImages'])->name('loadimages');
+
+
+    Route::get('/notifications', [NotificationController::class, 'test'])->name('');
+
+    Route::get('/user/notifications', [NotificationController::class, 'listUserNotifications'])->middleware('auth:api');
 });

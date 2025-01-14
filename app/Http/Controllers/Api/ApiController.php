@@ -63,12 +63,11 @@ class ApiController extends Controller
         try {
             $request->validate([
                 "email" => "required|email",
-                "password" => "required"
+                "password" => "required",
+                "firebase_token" => "nullable|string" 
             ]);
     
-    
-    
-            
+
             // if the twillio credential are ready then comment/delete these codes below
             if (!Auth::attempt([
                 "email" => $request->email,
@@ -80,6 +79,11 @@ class ApiController extends Controller
             }
 
             $user = Auth::user();
+             // Update the firebase_token field if it is present in the request
+             if ($request->has('firebase_token')) {
+                $user->firebase_token = $request->firebase_token;
+                $user->save();
+            }
             $token = $user->createToken("myToken")->accessToken;
 
             return response()->json([

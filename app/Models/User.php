@@ -10,8 +10,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class User extends Authenticatable
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
+
+class User extends Authenticatable implements FilamentUser
 {
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return str_ends_with($this->email, 'bami21@gmail.com');
+    }
+
 
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -25,6 +33,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'firebase_token',
         'phone_number',
         'first_name',
         'last_name',

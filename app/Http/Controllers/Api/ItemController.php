@@ -32,30 +32,26 @@ class ItemController extends Controller
             $user = Auth::user();
             
             $items = Product::where('user_id', $user->id)
-                    ->with(['stores', 'images'])
+                    ->with(['stores', 'images', 'productImages'])
                     ->where('archived', false)
                     ->get();
             
-           
-          
             return response()->json($items, 200);
         
         } catch(\Throwable $throwable) {
             $message = $throwable->getMessage();
             $statusCode = 500;
+    
             if ($throwable instanceof AuthenticationException) {
-                $message = "user is unauthenticated";
+                $message = "User is unauthenticated";
                 $statusCode = 401;
             }
-
-            response()->json([
+    
+            return response()->json([
                 'status' => 'failed',
                 'message' => $message
             ], $statusCode);
-
-
         }
-       
     }
 
     // get one item
@@ -123,14 +119,17 @@ class ItemController extends Controller
 
             $items = Product::where('user_id', $user->id)->with(['stores'])->where('archived', false)->get();
            
+         //  return  $items;
             $totalprice = 0;
-            foreach($items  as $item){
-              if($item->stores[0]->price == "" ){
-                $totalprice =  $totalprice  + 0;
-              }else{
-                $totalprice =  $totalprice  + $item->stores[0]->price;
-              }
-               
+           
+            foreach ($items as $item) {
+                // Check if the item has stores and at least one store
+                if (isset($item->stores[0])) {
+                    $price = $item->stores[0]->price ?? 0; // Use null coalescing to handle empty price
+                    $totalprice += $price == "" ? 0 : $price;
+                } else {
+                    $totalprice += 0; // No store means no price to add
+                }
             }
         
             $itemsCount = $items->count(); // or count($items)

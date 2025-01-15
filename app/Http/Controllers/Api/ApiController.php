@@ -23,12 +23,14 @@ class ApiController extends Controller
                 "last_name" => 'required',
                 "email" => "required|email|unique:users",
                 "password" => "required|confirmed",
+                "firebase_token" => "nullable|string" 
             ]);
 
             $user =  User::create([
                 "name" => $request->first_name . ' ' . $request->last_name,
                 "first_name" => $request->first_name,
                 "last_name" => $request->last_name,
+                "firebase_token" => $request->firebase_token,
                 "date_of_birth" => "2024-10-15 00:36:48",
                 "phone_number" => "000000000",
                 "zip_code" => "62704",

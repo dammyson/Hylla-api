@@ -20,6 +20,7 @@ use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Notifications\Notification;
 
 class PushNotificationResource extends Resource
 {
@@ -100,10 +101,17 @@ class PushNotificationResource extends Resource
                             foreach ($users as $user) {
                                 $user->notify(new SendPushNotification($record->title, $record->message));
                             }
-                        }else if($record->target === 'everyone'){
+                            Notification::make()
+                                ->title('Notification sent successfully')
+                                ->success()
+                                ->send();
+                        } else if ($record->target === 'everyone') {
                             $firebaseChannel = new FirebaseChannel();
                             $res = $firebaseChannel->sendNotificationTopic('everyone', $record->title, $record->message);
-                            
+                            Notification::make()
+                                ->title('Notification sent successfully')
+                                ->success()
+                                ->send();
                         }
                     })
                     ->requiresConfirmation(),

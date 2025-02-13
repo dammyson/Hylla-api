@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('message');
-            $table->enum('target', ['all', 'specific'])->default('specific');
+            $table->enum('target', ['all', 'everyone', 'specific'])->default('specific');
             $table->json('user_ids')->nullable(); 
             $table->json('firebase_tokens')->nullable(); 
             $table->timestamps();

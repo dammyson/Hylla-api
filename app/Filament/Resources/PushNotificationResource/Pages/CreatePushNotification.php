@@ -31,10 +31,15 @@ class CreatePushNotification extends CreateRecord
             if ($data['target'] === 'specific') {
                 $notification->firebase_tokens = User::whereIn('id', $data['user_ids'])->pluck('firebase_token')->toArray();
             }
+
+            if ($data['target'] === 'everyone') {
+                $notification->firebase_tokens = [];
+            }
     
             $notification->save();
+           
         } catch (\Exception $e) {
-            $data['user_ids'] = [];
+            throw $e;
         }
         return $notification;
     }

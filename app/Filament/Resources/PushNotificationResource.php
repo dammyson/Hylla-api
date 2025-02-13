@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Channels\FirebaseChannel;
 use App\Filament\Resources\PushNotificationResource\Pages;
 use App\Filament\Resources\PushNotificationResource\RelationManagers;
 use App\Models\PushNotification;
@@ -33,13 +34,14 @@ class PushNotificationResource extends Resource
 
 
                 Select::make('target')
-                ->label('Target Audience')
-                ->options([
-                    'all' => 'All Users',
-                    'specific' => 'Specific Users'
-                ])
-                ->reactive()
-                ->required(),
+                    ->label('Target Audience')
+                    ->options([
+                        'all' => 'All Users',
+                        'specific' => 'Specific Users',
+                        "everyone" => "Everyone",
+                    ])
+                    ->reactive()
+                    ->required(),
                 TextInput::make('title')
                     ->label('Notification Title')
                     ->required()
@@ -50,7 +52,7 @@ class PushNotificationResource extends Resource
                     ->required()
                     ->columnSpanFull(),
 
-               
+
                 Select::make('user_ids')
                     ->label('Select Users')
                     ->multiple()
@@ -90,12 +92,18 @@ class PushNotificationResource extends Resource
                     ->icon('heroicon-o-paper-airplane')
                     ->action(function (PushNotification $record) {
                         // Fetch users based on target type
-                        $users = $record->target === 'all'
-                            ? User::whereNotNull('firebase_token')->get()
-                            : User::whereIn('id', $record->user_ids)->get();
+                        if ($record->target === 'specific' || $record->target === 'all') {
+                            $users = $record->target === 'all'
+                                ? User::whereNotNull('firebase_token')->get()
+                                : User::whereIn('id', $record->user_ids)->get();
 
-                        foreach ($users as $user) {
-                            $user->notify(new SendPushNotification($record->title, $record->message));
+                            foreach ($users as $user) {
+                                $user->notify(new SendPushNotification($record->title, $record->message));
+                            }
+                        }else if($record->target === 'everyone'){
+                            $firebaseChannel = new FirebaseChannel();
+                            $res = $firebaseChannel->sendNotificationTopic('everyone', $record->title, $record->message);
+                            
                         }
                     })
                     ->requiresConfirmation(),

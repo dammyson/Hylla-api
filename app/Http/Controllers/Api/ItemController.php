@@ -5,20 +5,21 @@ namespace App\Http\Controllers\Api;
 use Exception;
 use App\Models\Item;
 use App\Models\User;
+use App\Models\Recall;
+use App\Models\Product;
 use App\Models\Category;
+use App\Models\ItemCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Item\UpdateRequest;
-use App\Models\ItemCache;
-use App\Models\Product;
-use App\Services\Product\CreateService;
-use App\Services\Utilities\GetHttpRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Services\Product\CreateService;
+use App\Http\Requests\Item\UpdateRequest;
+use App\Services\Utilities\GetHttpRequest;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Validation\ValidationException;
 use Laravel\Passport\Exceptions\AuthenticationException;
 
 class ItemController extends Controller
@@ -310,6 +311,23 @@ class ItemController extends Controller
             return response()->json($items, 200);
 
         } catch (\Throwable $throwable) {
+            $message = $throwable->getMessage();
+            $statusCode = 500;
+            response()->json([
+                'status' => 'failed',
+                'message' => $message
+            ], $statusCode);
+        }
+    }
+
+    public function getRecall() {
+        try {
+            $recalls = Recall::get();
+            $recalls["count"] = count($recalls);
+
+            return response()->json($recalls, 200);
+
+        }   catch (\Throwable $throwable) {
             $message = $throwable->getMessage();
             $statusCode = 500;
             response()->json([

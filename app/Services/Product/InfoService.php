@@ -18,7 +18,7 @@ class InfoService implements BaseServiceInterface
     public function run()
     {
         $product = Product::with(['specifications', 'assets', 'posts'])->findorfail($this->id);
-        $category = ProductFile::select('category')->distinct()->where('product_id',$this->id )->get();
+        $category = Product::select('category')->distinct()->where('product_id',$this->id )->get();
         $product['file_categories'] = $category ;
         return $product; 
     }

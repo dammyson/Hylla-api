@@ -100,6 +100,7 @@ Route::group([
 
     Route::get('/notifications', [NotificationController::class, 'test'])->name('');
 
-    
     Route::get('/user/notifications', [NotificationController::class, 'listUserNotifications'])->middleware('auth:api');
+    Route::get('/user/notifications/markAsRead/{id}', [NotificationController::class, 'markAsRead'])->middleware('auth:api');
+
 });

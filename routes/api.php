@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\RecallController;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,6 +58,7 @@ Route::group([
 ], function() {
     Route::post("support", [OtpController::class, "SendMail"])->name('support');
     Route::get('inventories', [ItemController::class, 'inventories'])->name('all.inventories');
+    Route::get('recalls', [ItemController::class, 'getRecall'])->name('all.recalls');
     Route::get('inventories/items', [ItemController::class, 'items'])->name('items.index');
     Route::post('inventories/items', [ItemController::class, 'addItem'])->name('item.add');
     
@@ -98,5 +100,6 @@ Route::group([
 
     Route::get('/notifications', [NotificationController::class, 'test'])->name('');
 
+    
     Route::get('/user/notifications', [NotificationController::class, 'listUserNotifications'])->middleware('auth:api');
 });

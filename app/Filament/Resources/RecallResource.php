@@ -3,18 +3,28 @@
 namespace App\Filament\Resources;
 
 use Filament\Forms;
+use App\Models\User;
 use Filament\Tables;
 use App\Models\Recall;
+use App\Models\Product;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Tables\Actions\EditAction;
+use App\Models\PushNotification;
 use Filament\Resources\Resource;
+use App\Channels\FirebaseChannel;
+use Filament\Tables\Actions\Action;
 use Tables\Actions\BulkActionGroup;
+use Illuminate\Support\Facades\Auth;
+use Filament\Notifications\Notification;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Builder;
+use App\Notifications\SendPushNotification;
 use App\Filament\Resources\RecallResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\RecallResource\RelationManagers;
-use Filament\Tables\Columns\ImageColumn;
+
 
 class RecallResource extends Resource
 {
@@ -32,9 +42,13 @@ class RecallResource extends Resource
                 Forms\Components\TextInput::make('description')
                     ->label('Product description')
                     ->required(),
-                Forms\Components\TextInput::make('image_url')
-                    ->label('Product image')
-                    ->required(),
+                // Forms\Components\TextInput::make('image_url')
+                //     ->label('Product image')
+                //     ->required(),
+
+                FileUpload::make('image_url')
+                    ->avatar()
+                    ->label('Product image'),
                 Forms\Components\TextInput::make('recall_description')
                     ->label('Reason for recall')
                     ->required(),
@@ -56,6 +70,7 @@ class RecallResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -26,7 +26,7 @@ class TestNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return [\App\Channels\FirebaseChannel::class];
     }
 
     public function toDatabase($notifiable)

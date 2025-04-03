@@ -6,7 +6,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "cloudinary-labs/cloudinary-laravel": "^2.3",
         "filament/filament": "^3.2",
         "filament/notifications": "^3.2",
         "google/apiclient": "^2.18",

@@ -10,7 +10,6 @@ use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProfileController;
-use App\Http\Controllers\Api\RecallController as ApiRecallController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RecallController;
 
@@ -54,7 +53,7 @@ Route::post('otp/login', [OtpController::class, 'loginWithOtp'])->name('otp.getl
 
 
 //protected route
-Route::group([ 
+Route::group([
     "middleware" => ["auth:api"]
 ], function() {
     Route::post("support", [OtpController::class, "SendMail"])->name('support');
@@ -101,9 +100,6 @@ Route::group([
 
     Route::get('/notifications', [NotificationController::class, 'test'])->name('');
 
+    
     Route::get('/user/notifications', [NotificationController::class, 'listUserNotifications'])->middleware('auth:api');
-    Route::get('/user/notifications/markAsRead/{id}', [NotificationController::class, 'markAsRead'])->middleware('auth:api');
-
-    Route::get('/recalls', [ApiRecallController::class, 'recallItems'])->name('');
-
 });

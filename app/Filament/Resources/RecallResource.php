@@ -58,9 +58,9 @@ class RecallResource extends Resource
     {
         return $table
             ->columns([ 
-                ImageColumn::make('image_url'),
-                    // ->label('Product image')
-                    // ->circular(),
+                ImageColumn::make('image_url')
+                    ->label('Product image')
+                    ->circular(),
                 Tables\Columns\TextColumn::make('product_name')->label('Title')->sortable(),
                 Tables\Columns\TextColumn::make('description')->label('description')->sortable(),
                 Tables\Columns\TextColumn::make('recall_description')->label('recall_reason')->sortable(),

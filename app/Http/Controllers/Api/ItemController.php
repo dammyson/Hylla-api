@@ -132,15 +132,19 @@ class ItemController extends Controller
                     $totalprice += 0; // No store means no price to add
                 }
             }
-        
             $itemsCount = $items->count(); // or count($items)
             $totalEstimatedValue = $totalprice;// items sum
             $favoriteItemsCount = $items->where('favorite', true)->count(); 
-            
+
+           $archivedItemsCount =  Product::where('user_id', $user->id)->with(['stores'])->where('archived', true)->get()->count();
+           $recalledItemsCount =  Recall::get()->count();
+          
             return response()->json([
                 'itemsCount'=> $itemsCount,
                 'favoriteItemsCount'=> $favoriteItemsCount,
-                'totalEstimatedValue' => $totalEstimatedValue
+                'totalEstimatedValue' => $totalEstimatedValue,
+                'archivedItemsCount' => $archivedItemsCount,
+                'recalledItemsCount' => $recalledItemsCount,
             ], 200);
         
         } catch(Exception $exception) {

@@ -66,4 +66,9 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Item::class);
         
     }
+
+    // public function PushNotification() {
+    //     return $this->belongsTo(PushNotification::class);
+
+    // }
 }

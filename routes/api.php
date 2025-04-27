@@ -75,8 +75,8 @@ Route::group([
     
     Route::get('categories', [CategoryController::class, 'categories'])->name('category.index');
     Route::get('categories/{id}', [CategoryController::class, 'item'])->name('category.index');
-    Route::get('categories/{categoryId}/products/{productId}/add', [CategoryController::class, 'addProductToCategory'])->name('category.product.add');
-    Route::get('categories/{categoryId}/products/{productId}/remove', [CategoryController::class, 'removeProductFromCategory'])->name('category.product.remove');
+    Route::patch('categories/{categoryId}/products/{productId}/add', [CategoryController::class, 'addProductToCategory'])->name('category.product.add');
+    Route::patch('categories/{categoryId}/products/{productId}/remove', [CategoryController::class, 'removeProductFromCategory'])->name('category.product.remove');
     Route::post('category', [CategoryController::class, 'addCategory'])->name('category.add');
     Route::post("categories/filterByCategoryName", [FilterController::class, "filterController"])->name('categoryfilter.name');
     Route::post("categories/filterByOrder", [FilterController::class, "orderController"])->name('categoryfilter.order');

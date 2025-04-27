@@ -74,6 +74,8 @@ Route::group([
     
     Route::get('categories', [CategoryController::class, 'categories'])->name('category.index');
     Route::get('categories/{id}', [CategoryController::class, 'item'])->name('category.index');
+    Route::patch('categories/{categoryId}/products/{productId}/add', [CategoryController::class, 'addProductToCategory'])->name('category.product.add');
+    Route::patch('categories/{categoryId}/products/{productId}/remove', [CategoryController::class, 'removeProductFromCategory'])->name('category.product.remove');
     Route::post('category', [CategoryController::class, 'addCategory'])->name('category.add');
     Route::post("categories/filterByCategoryName", [FilterController::class, "filterController"])->name('categoryfilter.name');
     Route::post("categories/filterByOrder", [FilterController::class, "orderController"])->name('categoryfilter.order');
@@ -102,4 +104,11 @@ Route::group([
 
     
     Route::get('/user/notifications', [NotificationController::class, 'listUserNotifications'])->middleware('auth:api');
+    Route::get('/user/notifications/markAsRead/{id}', [NotificationController::class, 'markAsRead'])->middleware('auth:api');
+    
+    Route::get('/user/notifications/list-push-notification', [NotificationController::class, 'listPushNotification'])->middleware('auth:api');
+    Route::get('/user/notifications/markNotificationAsRead/{id}', [NotificationController::class, 'markNotificationAsRead'])->middleware('auth:api');
+
+    Route::get('/recalls', [ApiRecallController::class, 'recallItems'])->name('');
+
 });

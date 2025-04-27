@@ -83,4 +83,25 @@ class CategoryController extends Controller
             ], $statusCode);
         }
     }
+
+    public function addProductToCategory($categoryId, $productId) {
+        $category = Category::findOrFail($categoryId);
+        $category->products()->syncWithoutDetaching([$productId]);
+
+        return response()->json([
+            "error" => false,
+            "category_products" => $category->products
+        ]);
+    }
+
+    public function removeProductFromCategory($categoryId, $productId)
+    {
+        $category = Category::findOrFail($categoryId);
+        $category->products()->detach($productId);
+        
+        return response()->json([
+            "error" => false,
+            "category_products" => $category->products
+        ]);
+    }
 }

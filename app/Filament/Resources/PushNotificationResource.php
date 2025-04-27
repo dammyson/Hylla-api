@@ -2,25 +2,26 @@
 
 namespace App\Filament\Resources;
 
-use App\Channels\FirebaseChannel;
-use App\Filament\Resources\PushNotificationResource\Pages;
-use App\Filament\Resources\PushNotificationResource\RelationManagers;
-use App\Models\PushNotification;
-use App\Models\User;
-use App\Notifications\SendPushNotification;
 use Filament\Forms;
+use App\Models\User;
+use Filament\Tables;
+use Filament\Forms\Form;
+use Filament\Tables\Table;
+use App\Models\PushNotification;
+use Filament\Resources\Resource;
+use App\Channels\FirebaseChannel;
+use Filament\Tables\Actions\Action;
+use App\Models\UserPushNotification;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Builder;
+use App\Notifications\SendPushNotification;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\PushNotificationResource\Pages;
+use App\Filament\Resources\PushNotificationResource\RelationManagers;
 
 class PushNotificationResource extends Resource
 {
@@ -100,6 +101,12 @@ class PushNotificationResource extends Resource
 
                             foreach ($users as $user) {
                                 $user->notify(new SendPushNotification($record->title, $record->message));
+
+                                UserPushNotification::create([
+                                    'user_id' => $user->id,
+                                    'push_notification_id' => $record->id,
+                                    'is_read' => false,
+                                ]);
                             }
                             Notification::make()
                                 ->title('Notification sent successfully')

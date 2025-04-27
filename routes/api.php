@@ -103,6 +103,9 @@ Route::group([
 
     Route::get('/user/notifications', [NotificationController::class, 'listUserNotifications'])->middleware('auth:api');
     Route::get('/user/notifications/markAsRead/{id}', [NotificationController::class, 'markAsRead'])->middleware('auth:api');
+    
+    Route::get('/user/notifications/list-push-notification', [NotificationController::class, 'listPushNotification'])->middleware('auth:api');
+    Route::get('/user/notifications/markNotificationAsRead/{id}', [NotificationController::class, 'markNotificationAsRead'])->middleware('auth:api');
 
     Route::get('/recalls', [ApiRecallController::class, 'recallItems'])->name('');
 

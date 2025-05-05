@@ -30,6 +30,10 @@ Route::post("login", [ApiController::class, "login"])->name('login');
 
 
 
+Route::group(['prefix' => 'auth'], function($router) {
+    $router->get('google/callback', [ApiController::class, 'gooogleCallback']);
+    
+});
 
 //forgot password implementation (open route)
 Route::get('password/forgot', [ForgotPasswordController::class, 'showForgotPasswordForm'])->name('forget.password.get');

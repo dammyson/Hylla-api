@@ -13,6 +13,7 @@
         "laravel/framework": "^10.10",
         "laravel/passport": "^11.8",
         "laravel/sanctum": "^3.3",
+        "laravel/socialite": "^5.20",
         "laravel/tinker": "^2.8",
         "mailjet/laravel-mailjet": "^3.0",
         "symfony/http-client": "^7.1",

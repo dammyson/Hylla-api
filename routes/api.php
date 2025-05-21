@@ -31,6 +31,7 @@ Route::post("login", [ApiController::class, "login"])->name('login');
 
 
 Route::group(['prefix' => 'auth'], function($router) {
+    $router->get('google/redirect', [ApiController::class, 'googleRedirect']);
     $router->get('google/callback', [ApiController::class, 'gooogleCallback']);
     
 });
@@ -78,6 +79,7 @@ Route::group([
     
     Route::get('categories', [CategoryController::class, 'categories'])->name('category.index');
     Route::get('categories/{id}', [CategoryController::class, 'item'])->name('category.index');
+    Route::patch('categories/update/{id}', [CategoryController::class, 'updateCategory'])->name('category.update');
     Route::patch('categories/{categoryId}/products/{productId}/add', [CategoryController::class, 'addProductToCategory'])->name('category.product.add');
     Route::patch('categories/{categoryId}/products/{productId}/remove', [CategoryController::class, 'removeProductFromCategory'])->name('category.product.remove');
     Route::post('category', [CategoryController::class, 'addCategory'])->name('category.add');

@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use Throwable;
 use App\Models\User;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Validation\ValidationException;
 use Laravel\Passport\Exceptions\AuthenticationException;
 
@@ -137,10 +140,7 @@ class ApiController extends Controller
 
     }
 
-    // I suggest we create a column called state and set it to false
-    // instead of deleting the account, and only give this privelege
-    // to an admin to be able to delete the account in case we later
-    // need information from this account
+
     public function deleteAccount() {
         try {
             // Auth::user()
@@ -160,4 +160,53 @@ class ApiController extends Controller
         
     }
 
+    public function googleRedirect(){
+        return Socialite::driver('google')->redirect();
+    }
+
+
+    public function gooogleCallback() {
+          // dd("I ran");
+        try {
+            $user = Socialite::driver('google')->stateless()->user();
+          
+        } catch (Throwable $e) {
+            return response()->json([
+                "error" => true,
+                "message" => $e->getMessage()
+            ], 500);
+            // return redirect('/')->with('error', 'Google authentication failed.');
+        }
+
+        $existingUser = User::where('email', $user->email)->first();
+
+        if ($existingUser) {
+            $data['user'] =  $existingUser;
+            $data['token'] =  $existingUser->createToken('Nova')->accessToken;
+      
+        } else {
+            [$firstName, $lastName] = explode(" ", $user->name);
+            $newUser = User::updateOrCreate([
+                'email' => $user->email
+            ], [
+                   'name' => $user->name,
+                    "date_of_birth" => "2024-10-15 00:36:48",
+                    "phone_number" => "000000000",
+                    "zip_code" => "62704",
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'password' =>  Hash::make(Str::random(16)), // Set a random password
+              
+            ]);
+
+
+            $data['user'] =  $newUser;
+            $data['token'] =  $newUser->createToken('Nova')->accessToken;
+        }
+
+        return response()->json([
+            "error" => false,
+            "data" => $data
+        ], 200);
+    }
 }

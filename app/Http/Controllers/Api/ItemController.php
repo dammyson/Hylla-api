@@ -222,17 +222,21 @@ class ItemController extends Controller
     }
 
 
-    public function updateItem(UpdateRequest $request, Product $item) {
+    public function updateItem(UpdateRequest $request,  $id) {
 
         $validated = $request->validated();
         try {
         
-            $item->fill($validated)->save();
+            $product = Product::with('categories')->findOrFail($id);
+        
+            $product->update($request->except('category_ids'));
+
+            $product->categories()->sync($validated['category_ids']);
 
             return response()->json([
-                'data'=>  $item,
-                'message' =>"Updated"
-            ], 200);
+                'mesasge' => 'Product updated successfully',
+                'product' => $product->load('categories'),
+            ]);
 
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();

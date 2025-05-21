@@ -10,7 +10,6 @@ use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProfileController;
-use App\Http\Controllers\Api\RecallController as ApiRecallController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RecallController;
 
@@ -31,6 +30,11 @@ Route::post("login", [ApiController::class, "login"])->name('login');
 
 
 
+Route::group(['prefix' => 'auth'], function($router) {
+    $router->get('google/redirect', [ApiController::class, 'googleRedirect']);
+    $router->get('google/callback', [ApiController::class, 'gooogleCallback']);
+    
+});
 
 //forgot password implementation (open route)
 Route::get('password/forgot', [ForgotPasswordController::class, 'showForgotPasswordForm'])->name('forget.password.get');
@@ -54,7 +58,7 @@ Route::post('otp/login', [OtpController::class, 'loginWithOtp'])->name('otp.getl
 
 
 //protected route
-Route::group([ 
+Route::group([
     "middleware" => ["auth:api"]
 ], function() {
     Route::post("support", [OtpController::class, "SendMail"])->name('support');
@@ -75,6 +79,7 @@ Route::group([
     
     Route::get('categories', [CategoryController::class, 'categories'])->name('category.index');
     Route::get('categories/{id}', [CategoryController::class, 'item'])->name('category.index');
+    Route::patch('categories/update/{id}', [CategoryController::class, 'updateCategory'])->name('category.update');
     Route::patch('categories/{categoryId}/products/{productId}/add', [CategoryController::class, 'addProductToCategory'])->name('category.product.add');
     Route::patch('categories/{categoryId}/products/{productId}/remove', [CategoryController::class, 'removeProductFromCategory'])->name('category.product.remove');
     Route::post('category', [CategoryController::class, 'addCategory'])->name('category.add');
@@ -103,6 +108,7 @@ Route::group([
 
     Route::get('/notifications', [NotificationController::class, 'test'])->name('');
 
+    
     Route::get('/user/notifications', [NotificationController::class, 'listUserNotifications'])->middleware('auth:api');
     Route::get('/user/notifications/markAsRead/{id}', [NotificationController::class, 'markAsRead'])->middleware('auth:api');
     

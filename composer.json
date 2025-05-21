@@ -6,7 +6,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "cloudinary-labs/cloudinary-laravel": "^2.3",
         "filament/filament": "^3.2",
         "filament/notifications": "^3.2",
         "google/apiclient": "^2.18",
@@ -14,6 +13,7 @@
         "laravel/framework": "^10.10",
         "laravel/passport": "^11.8",
         "laravel/sanctum": "^3.3",
+        "laravel/socialite": "^5.20",
         "laravel/tinker": "^2.8",
         "mailjet/laravel-mailjet": "^3.0",
         "symfony/http-client": "^7.1",

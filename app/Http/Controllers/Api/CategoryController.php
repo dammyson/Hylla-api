@@ -23,6 +23,7 @@ class CategoryController extends Controller
         try {
             $user = Auth::user();
             $userId =  $user->id;
+            $categories = Category::all();
             $categoriesWithProductCount = Category::whereHas('products', function ($query) use ($userId) {
                 $query->where('user_id', $userId);
             })
@@ -34,7 +35,8 @@ class CategoryController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' =>  $categoriesWithProductCount
+                'message' =>  $categoriesWithProductCount,
+                'categories' => $categories
             ], 200);
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();

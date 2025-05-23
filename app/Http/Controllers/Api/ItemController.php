@@ -260,8 +260,8 @@ class ItemController extends Controller
             }
 
             $archItem = Product::
-            // where('user_id', $user->id)
-                where('archived', true)
+                where('user_id', $user->id)
+                ->where('archived', true)
                 ->with(['stores', 'images'])
                 ->get();
           

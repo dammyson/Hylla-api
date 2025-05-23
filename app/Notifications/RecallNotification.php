@@ -34,7 +34,7 @@ class RecallNotification extends Notification
      */
     public function via($notifiable)
     {
-        return ['database'];
+        return [ \App\Channels\FirebaseChannel::class];
     }
 
     /**

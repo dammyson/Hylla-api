@@ -132,19 +132,15 @@ class ItemController extends Controller
                     $totalprice += 0; // No store means no price to add
                 }
             }
+        
             $itemsCount = $items->count(); // or count($items)
             $totalEstimatedValue = $totalprice;// items sum
             $favoriteItemsCount = $items->where('favorite', true)->count(); 
-
-           $archivedItemsCount =  Product::where('user_id', $user->id)->with(['stores'])->where('archived', true)->get()->count();
-           $recalledItemsCount =  Recall::get()->count();
-          
+            
             return response()->json([
                 'itemsCount'=> $itemsCount,
                 'favoriteItemsCount'=> $favoriteItemsCount,
-                'totalEstimatedValue' => $totalEstimatedValue,
-                'archivedItemsCount' => $archivedItemsCount,
-                'recalledItemsCount' => $recalledItemsCount,
+                'totalEstimatedValue' => $totalEstimatedValue
             ], 200);
         
         } catch(Exception $exception) {
@@ -226,17 +222,21 @@ class ItemController extends Controller
     }
 
 
-    public function updateItem(UpdateRequest $request, Product $item) {
+    public function updateItem(UpdateRequest $request,  $id) {
 
         $validated = $request->validated();
         try {
         
-            $item->fill($validated)->save();
+            $product = Product::with('categories')->findOrFail($id);
+        
+            $product->update($request->except('category_ids'));
+
+            $product->categories()->sync($validated['category_ids']);
 
             return response()->json([
-                'data'=>  $item,
-                'message' =>"Updated"
-            ], 200);
+                'mesasge' => 'Product updated successfully',
+                'product' => $product->load('categories'),
+            ]);
 
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();

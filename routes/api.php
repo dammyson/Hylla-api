@@ -11,7 +11,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\Api\RecallController as ApiRecallController;
+use App\Http\Controllers\Api\RecallController;
 
 /*
 |--------------------------------------------------------------------------
@@ -115,6 +115,6 @@ Route::group([
     Route::get('/user/notifications/list-push-notification', [NotificationController::class, 'listPushNotification'])->middleware('auth:api');
     Route::get('/user/notifications/markNotificationAsRead/{id}', [NotificationController::class, 'markNotificationAsRead'])->middleware('auth:api');
 
-    Route::get('/recalls', [ApiRecallController::class, 'recallItems'])->name('');
+    Route::get('/recalls', [RecallController::class, 'recallItems'])->name('');
 
 });

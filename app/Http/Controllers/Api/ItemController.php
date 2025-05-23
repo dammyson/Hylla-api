@@ -259,10 +259,12 @@ class ItemController extends Controller
                 throw new AuthenticationException();
             }
 
-            $archItem = Product::where('user_id', $user->id)
-                ->where('archived', true)
+            $archItem = Product::
+            // where('user_id', $user->id)
+                where('archived', true)
                 ->with(['stores', 'images'])
                 ->get();
+          
     
             return response()->json($archItem, 200);
 

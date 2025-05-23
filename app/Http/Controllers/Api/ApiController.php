@@ -222,8 +222,8 @@ class ApiController extends Controller
                     "date_of_birth" => "2024-10-15 00:36:48",
                     "phone_number" => "000000000",
                     "zip_code" => "62704",
-                    'first_name' => $request->firstName,
-                    'last_name' => $request->lastName,
+                    'first_name' => $request->first_name,
+                    'last_name' => $request->last_name,
                     'password' =>  Hash::make(Str::random(16)), // Set a random password
                 
                 ]);

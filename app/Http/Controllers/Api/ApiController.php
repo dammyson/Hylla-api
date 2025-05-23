@@ -211,14 +211,30 @@ class ApiController extends Controller
     }
 
     public function verifyGmail(Request $request) {
-       $user = User::where('email', $request->email)->first();
+        try {
+            $user = User::where('email', $request->email)->first();
 
-        if (!$user) {
+            if (!$user) {
+
+                $user = User::create([
+                    'email' => $user->email,
+                    'name' => $request->firstName . " " . $request->lastName,
+                    "date_of_birth" => "2024-10-15 00:36:48",
+                    "phone_number" => "000000000",
+                    "zip_code" => "62704",
+                    'first_name' => $request->firstName,
+                    'last_name' => $request->lastName,
+                    'password' =>  Hash::make(Str::random(16)), // Set a random password
+                
+                ]);
+            }
+        }  catch (\Throwable $throwable) {
             return response()->json([
-                'success'=> false,
-                'message' => "user not found"
+                'status'=> 'failed',
+                'message' => "failed to delete user account"
             ], 500);
         }
+       
 
         return response()->json([
             "success" => true, 

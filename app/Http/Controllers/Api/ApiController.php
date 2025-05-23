@@ -231,7 +231,8 @@ class ApiController extends Controller
         }  catch (\Throwable $throwable) {
             return response()->json([
                 'status'=> 'failed',
-                'message' => "failed to delete user account"
+                'message' => "failed to delete user account",
+                'actual_message' => $throwable->getMessage()
             ], 500);
         }
        

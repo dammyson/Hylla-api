@@ -11,7 +11,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\RecallController;
+use App\Http\Controllers\Api\RecallController as ApiRecallController;
 
 /*
 |--------------------------------------------------------------------------

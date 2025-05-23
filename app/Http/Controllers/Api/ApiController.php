@@ -218,7 +218,7 @@ class ApiController extends Controller
 
                 $user = User::create([
                     'email' => $request->email,
-                    'name' => $request->firstName . " " . $request->lastName,
+                    'name' => $request->first_name . " " . $request->last_name,
                     "date_of_birth" => "2024-10-15 00:36:48",
                     "phone_number" => "000000000",
                     "zip_code" => "62704",

@@ -33,6 +33,8 @@ Route::post("login", [ApiController::class, "login"])->name('login');
 Route::group(['prefix' => 'auth'], function($router) {
     $router->get('google/redirect', [ApiController::class, 'googleRedirect']);
     $router->get('google/callback', [ApiController::class, 'gooogleCallback']);
+    $router->post('google/verify-gmail', [ApiController::class, 'verifyGmail']);
+    
     
 });
 

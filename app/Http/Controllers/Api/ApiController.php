@@ -209,4 +209,21 @@ class ApiController extends Controller
             "data" => $data
         ], 200);
     }
+
+    public function verifyGmail(Request $request) {
+       $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success'=> false,
+                'message' => "user not found"
+            ], 500);
+        }
+
+        return response()->json([
+            "success" => true, 
+            "user" => $user
+        ], 200);
+
+    }
 }

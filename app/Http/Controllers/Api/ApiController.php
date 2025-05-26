@@ -237,7 +237,8 @@ class ApiController extends Controller
                 'actual_message' => $throwable->getMessage()
             ], 500);
         }
-
+        $user->is_social_account = true;
+        $user->save();
         $token = $user->createToken("myToken")->accessToken;
 
         return response()->json([

@@ -136,11 +136,17 @@ class ItemController extends Controller
             $itemsCount = $items->count(); // or count($items)
             $totalEstimatedValue = $totalprice;// items sum
             $favoriteItemsCount = $items->where('favorite', true)->count(); 
+            $archivedItemsCount = $items->where('archived', true)->count(); 
+            $recalledItemsCount = Recall::count();
+
             
             return response()->json([
                 'itemsCount'=> $itemsCount,
                 'favoriteItemsCount'=> $favoriteItemsCount,
-                'totalEstimatedValue' => $totalEstimatedValue
+                'totalEstimatedValue' => $totalEstimatedValue,
+                'archivedItemsCount' => $archivedItemsCount,
+                'recalledItemsCount' => $recalledItemsCount,
+
             ], 200);
         
         } catch(Exception $exception) {

@@ -40,6 +40,7 @@ class User extends Authenticatable implements FilamentUser
         'date_of_birth',
         'zip_code',
         'is_admin',
+        'is_social_account'
     ];
 
     /**

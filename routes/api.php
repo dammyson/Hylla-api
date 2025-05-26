@@ -115,5 +115,6 @@ Route::group([
     Route::get('/user/notifications/markAsRead/{id}', [NotificationController::class, 'markAsRead'])->middleware('auth:api');
 
     Route::get('/recalls', [RecallController::class, 'recallItems'])->name('');
+    Route::get('cache-item', [ProductController::class, 'getCacheItem']);
 
 });

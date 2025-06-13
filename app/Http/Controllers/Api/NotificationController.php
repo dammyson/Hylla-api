@@ -16,7 +16,7 @@ class NotificationController extends Controller
 {
     public function listUserNotifications(Request $request)
     {
-        $notifications = $request->user()->notifications()->paginate(10); 
+        $notifications = $request->user()->notifications; 
 
         return response()->json([
             'success' => true,

@@ -17,10 +17,10 @@ class NotificationController extends Controller
     public function listUserNotifications(Request $request)
     {
         $notifications = $request->user()->notifications; 
-
+        $data['data'] = $notifications;
         return response()->json([
             'success' => true,
-            'notifications' => $notifications,
+            'notifications' => $data,
         ]);
     }
 

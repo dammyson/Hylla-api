@@ -10,8 +10,8 @@ use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\RecallController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\RecallController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,6 +33,8 @@ Route::post("login", [ApiController::class, "login"])->name('login');
 Route::group(['prefix' => 'auth'], function($router) {
     $router->get('google/redirect', [ApiController::class, 'googleRedirect']);
     $router->get('google/callback', [ApiController::class, 'gooogleCallback']);
+    $router->post('google/verify-gmail', [ApiController::class, 'verifyGmail']);
+    
     
 });
 
@@ -111,10 +113,8 @@ Route::group([
     
     Route::get('/user/notifications', [NotificationController::class, 'listUserNotifications'])->middleware('auth:api');
     Route::get('/user/notifications/markAsRead/{id}', [NotificationController::class, 'markAsRead'])->middleware('auth:api');
-    
-    Route::get('/user/notifications/list-push-notification', [NotificationController::class, 'listPushNotification'])->middleware('auth:api');
-    Route::get('/user/notifications/markNotificationAsRead/{id}', [NotificationController::class, 'markNotificationAsRead'])->middleware('auth:api');
 
-    Route::get('/recalls', [ApiRecallController::class, 'recallItems'])->name('');
+    Route::get('/recalls', [RecallController::class, 'recallItems'])->name('');
+    Route::get('cache-item', [ProductController::class, 'getCacheItem']);
 
 });

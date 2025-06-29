@@ -37,6 +37,8 @@ class UpdateRequest extends FormRequest
             'size' => 'sometimes|string',
             'description' => 'sometimes|string',
             'last_update' => 'sometimes|string',
+            'category_ids' => 'array|required',
+            'category_ids.*' => 'string'
 
         ];
     }

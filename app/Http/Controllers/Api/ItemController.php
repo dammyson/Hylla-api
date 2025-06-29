@@ -136,11 +136,17 @@ class ItemController extends Controller
             $itemsCount = $items->count(); // or count($items)
             $totalEstimatedValue = $totalprice;// items sum
             $favoriteItemsCount = $items->where('favorite', true)->count(); 
+            $archivedItemsCount = $items->where('archived', true)->count(); 
+            $recalledItemsCount = Recall::count();
+
             
             return response()->json([
                 'itemsCount'=> $itemsCount,
                 'favoriteItemsCount'=> $favoriteItemsCount,
-                'totalEstimatedValue' => $totalEstimatedValue
+                'totalEstimatedValue' => $totalEstimatedValue,
+                'archivedItemsCount' => $archivedItemsCount,
+                'recalledItemsCount' => $recalledItemsCount,
+
             ], 200);
         
         } catch(Exception $exception) {
@@ -222,17 +228,21 @@ class ItemController extends Controller
     }
 
 
-    public function updateItem(UpdateRequest $request, Product $item) {
+    public function updateItem(UpdateRequest $request,  $id) {
 
         $validated = $request->validated();
         try {
         
-            $item->fill($validated)->save();
+            $product = Product::with('categories')->findOrFail($id);
+        
+            $product->update($request->except('category_ids'));
+
+            $product->categories()->sync($validated['category_ids']);
 
             return response()->json([
-                'data'=>  $item,
-                'message' =>"Updated"
-            ], 200);
+                'mesasge' => 'Product updated successfully',
+                'product' => $product->load('categories'),
+            ]);
 
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();
@@ -259,6 +269,7 @@ class ItemController extends Controller
                 ->where('archived', true)
                 ->with(['stores', 'images'])
                 ->get();
+          
     
             return response()->json($archItem, 200);
 

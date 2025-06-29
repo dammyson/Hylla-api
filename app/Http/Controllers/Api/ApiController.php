@@ -209,4 +209,43 @@ class ApiController extends Controller
             "data" => $data
         ], 200);
     }
+
+    public function verifyGmail(Request $request) {
+        try {
+
+            $user = User::where('email', $request->email)->first();
+
+            if (!$user) {
+
+                $user = User::create([
+                    'email' => $request->email,
+                    'name' => $request->first_name . " " . $request->last_name,
+                    "firebase_token" => $request->firebase_token,
+                    "date_of_birth" => "2024-10-15 00:36:48",
+                    "phone_number" => "000000000",
+                    "zip_code" => "62704",
+                    'first_name' => $request->first_name,
+                    'last_name' => $request->last_name,
+                    'password' =>  Hash::make(Str::random(16)), // Set a random password
+                    'is_social_account' => true
+                ]);
+            }
+        }  catch (\Throwable $throwable) {
+            return response()->json([
+                'status'=> 'failed',
+                'message' => "failed to delete user account",
+                'actual_message' => $throwable->getMessage()
+            ], 500);
+        }
+        $user->is_social_account = true;
+        $user->save();
+        $token = $user->createToken("myToken")->accessToken;
+
+        return response()->json([
+            "success" => true, 
+            "user" => $user,
+            "token" => $token
+        ], 200);
+
+    }
 }

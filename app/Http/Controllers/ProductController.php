@@ -115,4 +115,8 @@ class ProductController extends Controller
         ]);
     }
 
+    public function getCacheItem() {
+      return  ItemCache::get();
+    }
+
 }

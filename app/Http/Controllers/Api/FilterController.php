@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Item;
+use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -131,37 +132,36 @@ class FilterController extends Controller
 
     public function search(Request $request) {
         try {
-            $user = auth()->user();
 
-            if (!$user) {
-                throw new AuthorizationException('not authorized');
-            }
+            // Query products where any of the fields contain the search term (case-insensitive match from beginning)
+            $items = Product::where('user_id', $request->user()->id)
+                ->whereAny([
+                    'title',
+                    'description',
+                    'barcode_number',
+                    'barcode_formats',
+                    'mpn',
+                    'model',
+                    'asin',
+                    'title',
+                    'category',
+                    'manufacturer',
+                    'serial_number',
+                    'weight',
+                    'dimension',
+                    'warranty_length',
+                    'brand',
+                    'ingredients',
+                    'nutrition_facts',
+                    'size',
+                    'description',
+                    'code',
+                    'barcode_number'
+                ], 'LIKE', '%' . $request["item"] . '%')  // use %...% to match anywhere in the string
+            ->get();
 
-            $item = $request->items;
-        
-            $items = Item::query();
 
-            $items = $items->where(function($query) use ($item, $user) {
-                $query->where('user_id', $user->id)
-                    ->whereAny([
-                        'title',
-                        'subtitle',
-                        'description'
-                    ], 'LIKE', $item . '%');
-            });
-
-
-            // $items = $items->where(function($query) use ($item, $user) {
-            //     // echo $item;
-            //     $query->where('user_id', $user->id)
-            //         ->where('title', 'LIKE', '%' . $item . '%')
-            //         ->orWhere('subtitle', 'LIKE', '%' . $item . '%')
-            //         ->orWhere('description', 'LIKE', '%' . $item . '%');
-            // });
-
-            $items = $items->get();
-
-            return response()->json($items, 200);
+        return response()->json($items, 200);
         
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();

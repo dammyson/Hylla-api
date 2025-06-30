@@ -38,43 +38,27 @@ class ProfileController extends Controller
     // Edit user profile 
     public function profileEdit(Request $request) {
         $request->validate([
-            'email'=> 'sometimes|required|email',
-            'password' => 'sometimes|required|string',
             'phone_number' => 'sometimes|required|string',
-            'zip_code' => 'sometimes|required|string'
+            'zip_code' => 'sometimes|required|string',
+            'first_name' => 'sometimes|required|string',
+            'last_name' => 'sometimes|required|string'
         ]);
 
 
         try {
 
-            $userdata = Auth::user();
+            $user = $request->user();
 
-            if (!$userdata) {
-                throw new AuthorizationException();
-            }
-
-            // This method works but it does resaves everything in the database
-            // whereas the other alternative below tho is longer but is only changes
-            // row data where the particular request was entered
-            Auth::user()->update([
-                "email" => $request->email ?? $userdata->email,
-                "password" => $request->password ?? $userdata->password,
-                "phone_number" => $request->phone_number ?? $userdata->phone_number,
-                "zip_code" => $request->zip_code ?? $userdata->zip_code,
-                // "date_of_birth" => $request->date_of_birth ?? $userdata->date_of_birth
-            ]);
-
-            
-            /* 
-                alternative is below is longer but only queries the database for only
-                information that was entered by user to change
-            */
+            $user->phone_number = $request->phone_number ?? $user->phone_number;
+            $user->first_name = $request->first_name ?? $user->first_name;
+            $user->last_name = $request->last_name ?? $user->last_name;
+            $user->date_of_birth = $request->date_of_birth ?? $user->date_of_birth;
+            $user->zip_code = $request->zip_code ?? $user->zip_code;
+            $user->save();
         
 
-            $userUpdated = Auth::user();
-
             return response()->json([
-                "updatedUser" => $userUpdated
+                "updatedUser" => $user
             ], 200);
 
         } catch (\Throwable $throwable) {

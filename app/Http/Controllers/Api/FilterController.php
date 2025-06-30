@@ -104,7 +104,14 @@ class FilterController extends Controller
             }
 
             // Count the number of items in the category for the authenticated user
-            $itemCount = $user->items()->where('category_id', $category->id)->count();
+            // $itemCount = $user->items()->where('category_id', $category->id)->count();
+
+           // Count of the authenticated user’s items that sit in a given category
+            $itemCount = $user->items()
+                ->whereHas('product.categories', function ($q) use ($category) {
+                    $q->where('categories.id', $category->id);
+                })
+                ->count();
 
             return response()->json([
                 'category' => $category,

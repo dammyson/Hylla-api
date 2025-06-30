@@ -13,7 +13,7 @@ use Laravel\Passport\Exceptions\AuthenticationException;
 class FilterController extends Controller
 {
     //
-    public function orderController(Request $request) {
+    public function orderCategoryTest(Request $request) {
         try {
             $request->validate([
             'order_by' => 'required|string', // Assuming the form field is named 'order_by'
@@ -26,6 +26,8 @@ class FilterController extends Controller
             if ($request->order_by) {
                 $orderBy = $request->order_by;
                 // Query categories associated with items belonging to the authenticated user
+
+                //   $category = Category::where('name', $categoryName)->first();
                 $categories = $user->items()->with('category')->get()->pluck('category')->unique();
 
                 // Apply ordering
@@ -81,7 +83,67 @@ class FilterController extends Controller
         }
     }
 
-    public function filterController(Request $request)
+    public function orderCategory(Request $request) {
+        try {
+            $request->validate([
+                'order_by' => 'required|string', // Assuming the form field is named 'order_by'
+
+            ]);
+
+            // Get the authenticated user
+            $user = Auth::user();
+            $categories = Category::whereHas('products', function($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
+                ->with('products', function($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })->get();
+           
+            if ($request->order_by) {
+                $orderBy = $request->order_by;
+
+                // Apply ordering
+                if ($orderBy == 'asc') {
+                    $categories = $categories->sortBy('created_at');
+
+                } else if ( $orderBy == 'desc') {
+                    $categories = $categories->sortByDesc('created_at');
+
+                } else if ($orderBy == 'name' ) {
+                    $categories = $categories->sortBy('name');
+                }
+
+                // Get item count for each category
+               
+            }
+
+            $categoryData = $categories->map(function ($category) use ($user) {
+                return [
+                    'category' => $category,
+                    'item_count' => $category->products->count()
+                ];
+            });
+
+            return response()->json($categoryData);
+
+        } catch (\Throwable $throwable) {
+            $message = $throwable->getMessage();
+            $statusCode = 500;
+
+            if ($throwable instanceof AuthorizationException) {
+                $message = 'not authorized';
+                $statusCode = 403;
+            }
+            
+            return response()->json([
+                'status' => 'failed',
+                'message' => $message
+            ], $statusCode);
+
+        }
+    }
+
+    public function filterCategory(Request $request)
     {
         try {
             // Validate the request data

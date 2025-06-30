@@ -29,24 +29,16 @@ Route::post("register", [ApiController::class, "register"])->name('register');
 Route::post("login", [ApiController::class, "login"])->name('login');
 
 
-
 Route::group(['prefix' => 'auth'], function($router) {
     $router->get('google/redirect', [ApiController::class, 'googleRedirect']);
     $router->get('google/callback', [ApiController::class, 'gooogleCallback']);
     $router->post('google/verify-gmail', [ApiController::class, 'verifyGmail']);
     
-    
 });
 
-//forgot password implementation (open route)
-Route::get('password/forgot', [ForgotPasswordController::class, 'showForgotPasswordForm'])->name('forget.password.get');
-Route::post('password/forgot', [ForgotPasswordController::class, 'forgotPasswordPost'])->name('forgot.password.post');
-Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetPasswordForm'])->name('reset.passport.get');
-Route::post('password/reset', [ResetPasswordController::class, 'resetPasswordPost'])->name('reset.password.post');
-
 //
-Route::post('forgetpassword',  [OtpController::class,'generatePinForgetPassword']);
-Route::post('verifycode',  [OtpController::class,'VerifyOTP']);
+Route::post('forgetpassword',  [OtpController::class, 'generatePinForgetPassword']);
+Route::post('verifycode',  [OtpController::class, 'VerifyOTP']);
 Route::post('resetPassword', [ResetPasswordController::class, 'resetPassword']);
 
 /**
@@ -85,8 +77,8 @@ Route::group([
     Route::patch('categories/{categoryId}/products/{productId}/add', [CategoryController::class, 'addProductToCategory'])->name('category.product.add');
     Route::patch('categories/{categoryId}/products/{productId}/remove', [CategoryController::class, 'removeProductFromCategory'])->name('category.product.remove');
     Route::post('category', [CategoryController::class, 'addCategory'])->name('category.add');
-    Route::post("categories/filterByCategoryName", [FilterController::class, "filterController"])->name('categoryfilter.name');
-    Route::post("categories/filterByOrder", [FilterController::class, "orderController"])->name('categoryfilter.order');
+    Route::post("categories/filterByCategoryName", [FilterController::class, "filterCategory"])->name('categoryfilter.name');
+    Route::post("categories/filterByOrder", [FilterController::class, "orderCategory"])->name('categoryfilter.order');
     
     
     // table for contact support

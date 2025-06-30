@@ -12,58 +12,49 @@ use Laravel\Passport\Exceptions\AuthenticationException;
 
 class FilterController extends Controller
 {
-    //
-    public function orderController(Request $request) {
+    public function orderCategory(Request $request) {
         try {
             $request->validate([
-            'order_by' => 'required|string', // Assuming the form field is named 'order_by'
-        
+                'order_by' => 'required|string', // Assuming the form field is named 'order_by'
+
             ]);
 
             // Get the authenticated user
             $user = Auth::user();
-            
+            $categories = Category::whereHas('products', function($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
+                ->with('products', function($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })->get();
+           
             if ($request->order_by) {
                 $orderBy = $request->order_by;
-                // Query categories associated with items belonging to the authenticated user
-                $categories = $user->items()->with('category')->get()->pluck('category')->unique();
 
                 // Apply ordering
-
                 if ($orderBy == 'asc') {
                     $categories = $categories->sortBy('created_at');
-                    // $categories = $categories->sortBy([
-                    //     ['created_at', 'asc'],
-                    //     ['name', 'desc'],
-                    // ]);
-                    
 
                 } else if ( $orderBy == 'desc') {
                     $categories = $categories->sortByDesc('created_at');
-                    // $categories = $categories->sortByDesc([
-                    //     ['created_at', 'desc'],
-                    //     ['name', 'asc'],
-                    // ]);
-                
+
                 } else if ($orderBy == 'name' ) {
                     $categories = $categories->sortBy('name');
-                    // $categories = $categories->sortBy([
-                    //     ['name', 'asc'],
-                    //     ['created_at', 'asc'],
-                    // ]);
                 }
 
                 // Get item count for each category
-                $categoryData = $categories->map(function ($category) use ($user) {
-                    $itemCount = $user->items()->where('category_id', $category->id)->count();
-                    return [
-                        'category' => $category,
-                        'item_count' => $itemCount
-                    ];
-                });
+               
+            }
 
-                return response()->json($categoryData);
-            };
+            $categoryData = $categories->map(function ($category) use ($user) {
+                return [
+                    'category' => $category,
+                    'item_count' => $category->products->count()
+                ];
+            });
+
+            return response()->json($categoryData);
+
         } catch (\Throwable $throwable) {
             $message = $throwable->getMessage();
             $statusCode = 500;
@@ -81,7 +72,7 @@ class FilterController extends Controller
         }
     }
 
-    public function filterController(Request $request)
+    public function filterCategory(Request $request)
     {
         try {
             // Validate the request data

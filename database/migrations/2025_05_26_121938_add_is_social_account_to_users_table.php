@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            //
-            $table->boolean('is_social_account')->default(false);
-        });
+        if (!Schema::hasColumn('users', 'is_social_account')) {
+            Schema::table('users', function (Blueprint $table) {
+                 $table->boolean('is_social_account')->default(false);
+            });
+        }
     }
 
     /**

@@ -115,7 +115,7 @@ class FilterController extends Controller
             $message = $throwable->getMessage();
             $statusCode = 500;
 
-            if ($exception instanceof AuthenticationException) {
+            if ($throwable instanceof AuthenticationException) {
                 $message = 'user is not authenticated';
                 $statusCode = 401;
              }
@@ -169,7 +169,7 @@ class FilterController extends Controller
             $message = $throwable->getMessage();
             $statusCode = 500;
 
-            if ($exception instanceof AuthenticationException) {
+            if ($throwable instanceof AuthenticationException) {
                 $message = 'user is not authenticated';
                 $statusCode = 401;
             }

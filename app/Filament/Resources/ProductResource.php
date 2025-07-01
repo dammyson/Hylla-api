@@ -129,7 +129,7 @@ class ProductResource extends Resource
                 ->searchable(),
                 Tables\Columns\IconColumn::make('archived')->label('Archived')->boolean()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\IconColumn::make('favorite')->label('Favorite')->boolean()->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('title')->label('Title')->sortable(),
+                Tables\Columns\TextColumn::make('title')->label('Title')->sortable()->searchable(),
                 Tables\Columns\TextColumn::make('category')->label('Category')->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('manufacturer')->label('Manufacturer')->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('brand')->label('Brand')->toggleable(isToggledHiddenByDefault: true),

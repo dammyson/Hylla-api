@@ -16,6 +16,7 @@ use App\Channels\FirebaseChannel;
 use Filament\Tables\Actions\Action;
 use Tables\Actions\BulkActionGroup;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\FileUpload;
@@ -48,7 +49,14 @@ class RecallResource extends Resource
 
                 FileUpload::make('image_url')
                     ->avatar()
-                    ->label('Product image'),
+                    ->label('Product image')
+                    ->disk('cloudinary') // Ensure you have the correct disk configured in `config/filesystems.php`
+                    ->directory('uploads') // Optional: define a folder in Cloudinary
+                    ->saveUploadedFileUsing(function ($file) {
+                        $path = Storage::disk('cloudinary')->putFile('uploads', $file);
+                        return Storage::disk('cloudinary')->url($path);
+                    })
+                    ->getUploadedFileNameForStorageUsing(fn ($file) => $file->hashName()),
                 Forms\Components\TextInput::make('recall_description')
                     ->label('Reason for recall')
                     ->required(),

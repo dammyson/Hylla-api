@@ -11,14 +11,6 @@ use Illuminate\Support\Facades\Hash;
 
 class ResetPasswordController extends Controller
 {
-    //
-
-
-    public function showResetPasswordForm($token) {
-
-        return view('password.resetPasswordForm', compact('token'));
-
-    }
 
     public function resetPasswordPost(Request $request) {
        try {
